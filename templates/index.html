@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Sentimientos - PyMES</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Analizador de Sentimientos</h1>
+            <p>Descubre qué piensan tus clientes de forma automática</p>
+        </header>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="openTab(event, 'archivo')">
+                    📁 Subir Archivo
+                </button>
+                <button class="tab" onclick="openTab(event, 'texto')">
+                    ✍️ Pegar Texto
+                </button>
+            </div>
+
+            <!-- Tab 1: Subir archivo -->
+            <div id="archivo" class="tab-content active">
+                <form action="/analizar" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="file">Selecciona un archivo .txt con comentarios:</label>
+                        <input type="file" id="file" name="file" accept=".txt" required>
+                        <small style="color: #666; display: block; margin-top: 8px;">
+                            📝 El archivo debe contener un comentario por línea
+                        </small>
+                    </div>
+                    <input type="hidden" name="tipo" value="archivo">
+                    <button type="submit" class="btn">🚀 Analizar Comentarios</button>
+                </form>
+            </div>
+
+            <!-- Tab 2: Pegar texto -->
+            <div id="texto" class="tab-content">
+                <form action="/analizar" method="POST">
+                    <div class="form-group">
+                        <label for="comentarios">Pega tus comentarios aquí (uno por línea):</label>
+                        <textarea id="comentarios" name="comentarios" placeholder="Excelente servicio, muy recomendado&#10;El producto llegó defectuoso&#10;Precio justo, nada especial&#10;..." required></textarea>
+                        <small style="color: #666; display: block; margin-top: 8px;">
+                            💡 Escribe cada comentario en una línea diferente
+                        </small>
+                    </div>
+                    <input type="hidden" name="tipo" value="texto">
+                    <button type="submit" class="btn">🚀 Analizar Comentarios</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #667eea; margin-bottom: 15px;">ℹ️ ¿Cómo funciona?</h3>
+            <div class="alert alert-info">
+                <p><strong>1.</strong> Elige si quieres subir un archivo .txt o pegar comentarios directamente</p>
+                <p><strong>2.</strong> El sistema analizará cada comentario usando procesamiento de lenguaje natural</p>
+                <p><strong>3.</strong> Recibirás un reporte completo con estadísticas y clasificación de sentimientos</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            // Ocultar todos los contenidos
+            var tabcontent = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            // Remover clase active de todos los tabs
+            var tabs = document.getElementsByClassName("tab");
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            // Mostrar el tab seleccionado
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados del Análisis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Resultados del Análisis</h1>
+            <p>Análisis completado de {{ reporte.total }} comentarios</p>
+        </header>
+
+        <!-- Estadísticas generales -->
+        <div class="stats-grid">
+            <div class="stat-card positivo">
+                <div class="stat-number">{{ reporte.positivos }}</div>
+                <div class="stat-label">😊 Positivos</div>
+                <div style="margin-top: 10px; font-size: 1.3em;">{{ reporte.porcentaje_positivos }}%</div>
+            </div>
+            
+            <div class="stat-card negativo">
+                <div class="stat-number">{{ reporte.negativos }}</div>
+                <div class="stat-label">😞 Negativos</div>
+                <div style="margin-top: 10px; font-size: 1.3em;">{{ reporte.porcentaje_negativos }}%</div>
+            </div>
+            
+            <div class="stat-card neutro">
+                <div class="stat-number">{{ reporte.neutros }}</div>
+                <div class="stat-label">😐 Neutros</div>
+                <div style="margin-top: 10px; font-size: 1.3em;">{{ reporte.porcentaje_neutros }}%</div>
+            </div>
+        </div>
+
+        <!-- Sentimiento general -->
+        <div class="card">
+            <div class="sentiment-general">
+                <h3>📈 Sentimiento General</h3>
+                {% if reporte.porcentaje_positivos > reporte.porcentaje_negativos + 10 %}
+                    <p><strong>🎉 Los clientes están SATISFECHOS</strong></p>
+                    <p>💡 Recomendación: Mantén la calidad de tu servicio/producto</p>
+                {% elif reporte.porcentaje_negativos > reporte.porcentaje_positivos + 10 %}
+                    <p><strong>⚠️ Los clientes están INSATISFECHOS</strong></p>
+                    <p>💡 Recomendación: Revisa urgentemente las áreas problemáticas</p>
+                {% else %}
+                    <p><strong>🤔 Opiniones MIXTAS</strong></p>
+                    <p>💡 Recomendación: Identifica puntos de mejora específicos</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Lista de comentarios -->
+        <div class="card">
+            <h3 style="color: #667eea; margin-bottom: 20px;">📝 Comentarios Analizados</h3>
+            <div class="comentarios-list">
+                {% for resultado in resultados %}
+                <div class="comentario-item {{ resultado.sentimiento.lower() }}">
+                    <div class="comentario-header">
+                        <span class="comentario-emoji">{{ resultado.emoji }}</span>
+                        <span class="comentario-badge badge-{{ resultado.sentimiento.lower() }}">
+                            {{ resultado.sentimiento }}
+                        </span>
+                    </div>
+                    <div class="comentario-texto">
+                        {{ resultado.comentario }}
+                    </div>
+                    <div class="comentario-score">
+                        Score: {{ resultado.score }} | Confianza: {{ resultado.confianza }}%
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Botón para volver -->
+        <div class="card">
+            <a href="/" style="text-decoration: none;">
+                <button class="btn btn-secondary">🔙 Analizar Más Comentarios</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
