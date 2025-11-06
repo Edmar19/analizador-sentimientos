@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.utils import secure_filename
 import os
 from analizador import procesar_comentarios_completos, generar_reporte
 
@@ -51,9 +50,7 @@ def analizar():
     
     return render_template('resultados.html', resultados=resultados, reporte=reporte)
 
-# AÑADIR ESTO PARA RENDER
-import os
-
+# CONFIGURACIÓN CORREGIDA PARA RENDER
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=False)
