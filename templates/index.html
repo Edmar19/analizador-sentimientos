@@ -27,10 +27,10 @@
             <div id="archivo" class="tab-content active">
                 <form action="/analizar" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
-                        <label for="file">Selecciona un archivo .txt con comentarios:</label>
-                        <input type="file" id="file" name="file" accept=".txt" required>
+                        <label for="file">Selecciona un archivo .txt o .csv con comentarios:</label>
+                        <input type="file" id="file" name="file" accept=".txt,.csv" required>
                         <small style="color: #666; display: block; margin-top: 8px;">
-                            📝 El archivo debe contener un comentario por línea
+                            📝 El archivo debe contener un comentario por línea (formatos .txt o .csv aceptados)
                         </small>
                     </div>
                     <input type="hidden" name="tipo" value="archivo">
