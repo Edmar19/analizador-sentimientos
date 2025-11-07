@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
+import csv
 from analizador import procesar_comentarios_completos, generar_reporte
 
 app = Flask(__name__)
@@ -31,10 +32,35 @@ def analizar():
         if file.filename == '':
             return redirect(url_for('index'))
         
-        if file and file.filename.endswith('.txt'):
-            # Leer el archivo directamente
-            contenido = file.read().decode('utf-8')
-            comentarios = [linea.strip() for linea in contenido.split('\n') if linea.strip()]
+        # CORRECCIÓN: .csv no .cvs
+        if file and (file.filename.endswith('.txt') or file.filename.endswith('.csv')):
+            if file.filename.endswith('.csv'):
+                # PROCESAR CSV CORRECTAMENTE
+                try:
+                    # Decodificar el contenido
+                    contenido = file.read().decode('utf-8').splitlines()
+                    reader = csv.reader(contenido)
+                    
+                    for fila in reader:
+                        if fila:  # Si la fila no está vacía
+                            # Buscar la primera columna con texto
+                            for celda in fila:
+                                if celda.strip():  # Si la celda tiene texto
+                                    comentarios.append(celda.strip())
+                                    break
+                except Exception as e:
+                    print(f"Error procesando CSV: {e}")
+                    # Fallback: procesar como texto plano
+                    file.seek(0)  # Volver al inicio del archivo
+                    contenido = file.read().decode('utf-8')
+                    lineas = contenido.split('\n')
+                    for linea in lineas:
+                        if linea.strip():
+                            comentarios.append(linea.strip())
+            else:
+                # Procesar TXT normal
+                contenido = file.read().decode('utf-8')
+                comentarios = [linea.strip() for linea in contenido.split('\n') if linea.strip()]
     
     elif tipo == 'texto':
         # Procesar texto pegado
