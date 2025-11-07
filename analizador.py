@@ -189,77 +189,35 @@ def generar_reporte(resultados):
     
     return reporte
 
-def mostrar_resultados(resultados, reporte):
+def obtener_top_comentarios(resultados, tipo='positivos', cantidad=5):
     """
-    Muestra los resultados en consola de forma visual
+    Obtiene los comentarios más positivos o negativos
     """
-    print("\n" + "="*70)
-    print("ANÁLISIS DE SENTIMIENTOS - RESULTADOS")
-    print("="*70 + "\n")
-    
-    for resultado in resultados:
-        print(f"[{resultado['id']}] {resultado['emoji']} {resultado['sentimiento']} "
-              f"(Score: {resultado['score']}, Confianza: {resultado['confianza']}%)")
-        print(f"    📝 {resultado['comentario']}")
-        print()
-    
-    print("="*70)
-    print("RESUMEN ESTADÍSTICO")
-    print("="*70)
-    print(f"Total de comentarios: {reporte['total']}")
-    print(f"\n😊 Positivos: {reporte['positivos']} ({reporte['porcentaje_positivos']}%)")
-    print(f"😞 Negativos: {reporte['negativos']} ({reporte['porcentaje_negativos']}%)")
-    print(f"😐 Neutros: {reporte['neutros']} ({reporte['porcentaje_neutros']}%)")
-    print("="*70 + "\n")
-    
-    # Mostrar sentimiento general
-    if reporte['porcentaje_positivos'] > reporte['porcentaje_negativos'] + 10:
-        print("📊 SENTIMIENTO GENERAL: Los clientes están SATISFECHOS 👍")
-        print("💡 Recomendación: Mantén la calidad de tu servicio/producto")
-    elif reporte['porcentaje_negativos'] > reporte['porcentaje_positivos'] + 10:
-        print("📊 SENTIMIENTO GENERAL: Los clientes están INSATISFECHOS 👎")
-        print("⚠️  Recomendación: Revisa urgentemente las áreas problemáticas")
+    if tipo == 'positivos':
+        # Filtrar solo positivos y ordenar por score descendente
+        positivos = [r for r in resultados if r['sentimiento'] == 'Positivo']
+        positivos_ordenados = sorted(positivos, key=lambda x: x['score'], reverse=True)
+        return positivos_ordenados[:cantidad]
     else:
-        print("📊 SENTIMIENTO GENERAL: Opiniones MIXTAS 🤔")
-        print("💡 Recomendación: Identifica puntos de mejora específicos")
-    print()
+        # Filtrar solo negativos y ordenar por score ascendente
+        negativos = [r for r in resultados if r['sentimiento'] == 'Negativo']
+        negativos_ordenados = sorted(negativos, key=lambda x: x['score'])
+        return negativos_ordenados[:cantidad]
 
-# Código para probar el analizador
-if __name__ == "__main__":
-    from procesador import leer_comentarios
+def generar_datos_grafico(reporte):
+    """
+    Genera datos para el gráfico de pastel
+    """
+    labels = ['Positivos', 'Negativos', 'Neutros']
+    values = [
+        reporte['porcentaje_positivos'], 
+        reporte['porcentaje_negativos'], 
+        reporte['porcentaje_neutros']
+    ]
+    colors = ['#38ef7d', '#f45c43', '#bdc3c7']
     
-    # Leer comentarios del archivo
-    comentarios = leer_comentarios('datos/comentarios.txt')
-    
-    if comentarios:
-        print("🚀 Iniciando análisis de sentimientos en ESPAÑOL (versión mejorada)...\n")
-        
-        # Procesar todos los comentarios
-        resultados = procesar_comentarios_completos(comentarios)
-        
-        # Generar reporte estadístico
-        reporte = generar_reporte(resultados)
-        
-        # Mostrar resultados
-        mostrar_resultados(resultados, reporte)
-        
-        # Mostrar top comentarios por categoría
-        print("\n" + "="*70)
-        print("TOP COMENTARIOS POR CATEGORÍA")
-        print("="*70)
-        
-        # Más positivo
-        mas_positivo = max(resultados, key=lambda x: x['score'] if x['sentimiento'] == 'Positivo' else -999)
-        if mas_positivo['sentimiento'] == 'Positivo':
-            print(f"\n😊 MÁS POSITIVO (Score: {mas_positivo['score']}):")
-            print(f"   {mas_positivo['comentario']}")
-        
-        # Más negativo
-        mas_negativo = min(resultados, key=lambda x: x['score'] if x['sentimiento'] == 'Negativo' else 999)
-        if mas_negativo['sentimiento'] == 'Negativo':
-            print(f"\n😞 MÁS NEGATIVO (Score: {mas_negativo['score']}):")
-            print(f"   {mas_negativo['comentario']}")
-        
-        print("\n" + "="*70 + "\n")
-    else:
-        print("❌ No se pudieron leer los comentarios")
+    return {
+        'labels': labels,
+        'values': values,
+        'colors': colors
+    }
