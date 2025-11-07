@@ -38,48 +38,214 @@
         <div class="card">
             <div class="sentiment-general">
                 <h3>📈 Sentimiento General</h3>
-                {% if reporte.porcentaje_positivos > reporte.porcentaje_negativos + 10 %}
-                    <p><strong>🎉 Los clientes están SATISFECHOS</strong></p>
-                    <p>💡 Recomendación: Mantén la calidad de tu servicio/producto</p>
+                {% if reporte.porcentaje_positivos > reporte.porcentaje_negativos + 20 %}
+                    <p><strong>🎉 EXCELENTE - Clientes MUY SATISFECHOS</strong></p>
+                    <p>💡 Recomendación: Mantén la excelente calidad de tu servicio/producto y comparte los comentarios positivos con tu equipo.</p>
+                {% elif reporte.porcentaje_positivos > reporte.porcentaje_negativos + 10 %}
+                    <p><strong>😊 BUENO - Clientes SATISFECHOS</strong></p>
+                    <p>💡 Recomendación: Continúa con tu buen trabajo y aborda las áreas de mejora menores.</p>
+                {% elif reporte.porcentaje_negativos > reporte.porcentaje_positivos + 20 %}
+                    <p><strong>🚨 CRÍTICO - Clientes MUY INSATISFECHOS</strong></p>
+                    <p>💡 Recomendación: Revisa urgentemente las áreas problemáticas y contacta a los clientes insatisfechos.</p>
                 {% elif reporte.porcentaje_negativos > reporte.porcentaje_positivos + 10 %}
-                    <p><strong>⚠️ Los clientes están INSATISFECHOS</strong></p>
-                    <p>💡 Recomendación: Revisa urgentemente las áreas problemáticas</p>
+                    <p><strong>⚠️ ALERTA - Clientes INSATISFECHOS</strong></p>
+                    <p>💡 Recomendación: Identifica y corrige los principales problemas reportados por los clientes.</p>
                 {% else %}
-                    <p><strong>🤔 Opiniones MIXTAS</strong></p>
-                    <p>💡 Recomendación: Identifica puntos de mejora específicos</p>
+                    <p><strong>🤔 OPINIONES MIXTAS - Resultados EQUILIBRADOS</strong></p>
+                    <p>💡 Recomendación: Analiza los comentarios específicos para identificar patrones y oportunidades de mejora.</p>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Lista de comentarios -->
+        <!-- Gráficos -->
         <div class="card">
-            <h3 style="color: #667eea; margin-bottom: 20px;">📝 Comentarios Analizados</h3>
+            <h3 style="color: #667eea; margin-bottom: 20px;">📊 Visualización de Resultados</h3>
+            
+            <div class="graficos-container">
+                <div class="grafico">
+                    <h4>📈 Distribución Porcentual</h4>
+                    <img src="{{ grafico_pastel }}" alt="Gráfico de Pastel" style="width: 100%; max-width: 500px;">
+                    <p style="text-align: center; margin-top: 10px; color: #666;">
+                        Distribución porcentual de sentimientos en los comentarios
+                    </p>
+                </div>
+                
+                <div class="grafico">
+                    <h4>📊 Cantidad por Sentimiento</h4>
+                    <img src="{{ grafico_barras }}" alt="Gráfico de Barras" style="width: 100%; max-width: 500px;">
+                    <p style="text-align: center; margin-top: 10px; color: #666;">
+                        Cantidad absoluta de comentarios por categoría
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Comentarios -->
+        <div class="card">
+            <h3 style="color: #667eea; margin-bottom: 20px;">🏆 Comentarios Destacados</h3>
+            
+            <div class="top-comentarios-container">
+                <!-- Top Positivos -->
+                <div class="top-seccion">
+                    <h4>⭐ Top 5 Comentarios Más Positivos</h4>
+                    {% if top_positivos %}
+                        {% for comentario in top_positivos %}
+                        <div class="comentario-destacado positivo">
+                            <div class="comentario-header">
+                                <span class="comentario-emoji">😊</span>
+                                <span class="comentario-score-destacado">Score: {{ comentario.score }}</span>
+                            </div>
+                            <div class="comentario-texto">{{ comentario.comentario }}</div>
+                            <div class="comentario-meta">
+                                <span class="comentario-confianza">Confianza: {{ comentario.confianza }}%</span>
+                                <span class="comentario-id">#{{ comentario.id }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-comentarios">
+                            <p>No hay comentarios positivos destacados</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Top Negativos -->
+                <div class="top-seccion">
+                    <h4>⚠️ Top 5 Comentarios Más Negativos</h4>
+                    {% if top_negativos %}
+                        {% for comentario in top_negativos %}
+                        <div class="comentario-destacado negativo">
+                            <div class="comentario-header">
+                                <span class="comentario-emoji">😞</span>
+                                <span class="comentario-score-destacado">Score: {{ comentario.score }}</span>
+                            </div>
+                            <div class="comentario-texto">{{ comentario.comentario }}</div>
+                            <div class="comentario-meta">
+                                <span class="comentario-confianza">Confianza: {{ comentario.confianza }}%</span>
+                                <span class="comentario-id">#{{ comentario.id }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-comentarios">
+                            <p>No hay comentarios negativos destacados</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista completa de comentarios -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #667eea; margin: 0;">📝 Todos los Comentarios Analizados</h3>
+                <span class="total-comentarios">Total: {{ reporte.total }}</span>
+            </div>
+            
+            <div class="filtros">
+                <button class="filtro-btn active" onclick="filtrarComentarios('todos')">Todos</button>
+                <button class="filtro-btn" onclick="filtrarComentarios('positivo')">😊 Positivos</button>
+                <button class="filtro-btn" onclick="filtrarComentarios('negativo')">😞 Negativos</button>
+                <button class="filtro-btn" onclick="filtrarComentarios('neutro')">😐 Neutros</button>
+            </div>
+            
             <div class="comentarios-list">
                 {% for resultado in resultados %}
-                <div class="comentario-item {{ resultado.sentimiento.lower() }}">
+                <div class="comentario-item {{ resultado.sentimiento.lower() }}" data-sentimiento="{{ resultado.sentimiento.lower() }}">
                     <div class="comentario-header">
                         <span class="comentario-emoji">{{ resultado.emoji }}</span>
                         <span class="comentario-badge badge-{{ resultado.sentimiento.lower() }}">
                             {{ resultado.sentimiento }}
                         </span>
+                        <span class="comentario-id">#{{ resultado.id }}</span>
                     </div>
                     <div class="comentario-texto">
                         {{ resultado.comentario }}
                     </div>
-                    <div class="comentario-score">
-                        Score: {{ resultado.score }} | Confianza: {{ resultado.confianza }}%
+                    <div class="comentario-stats">
+                        <span class="comentario-score">Score: {{ resultado.score }}</span>
+                        <span class="comentario-confianza">Confianza: {{ resultado.confianza }}%</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Botón para volver -->
-        <div class="card">
-            <a href="/" style="text-decoration: none;">
-                <button class="btn btn-secondary">🔙 Analizar Más Comentarios</button>
-            </a>
+        <!-- Acciones -->
+        <div class="card acciones">
+            <div class="acciones-grid">
+                <a href="/" style="text-decoration: none;">
+                    <button class="btn btn-primary">🔁 Analizar Más Comentarios</button>
+                </a>
+                <a href="/acerca" style="text-decoration: none;">
+                    <button class="btn btn-secondary">🤖 Acerca del Proyecto</button>
+                </a>
+                <button class="btn btn-info" onclick="window.print()">🖨️ Imprimir Reporte</button>
+            </div>
+        </div>
+
+        <!-- Resumen ejecutivo -->
+        <div class="card resumen-ejecutivo">
+            <h3 style="color: #667eea; margin-bottom: 15px;">📋 Resumen Ejecutivo</h3>
+            <div class="resumen-content">
+                <div class="resumen-item">
+                    <strong>📅 Fecha de análisis:</strong> <span id="fecha-actual"></span>
+                </div>
+                <div class="resumen-item">
+                    <strong>📊 Total de comentarios:</strong> {{ reporte.total }}
+                </div>
+                <div class="resumen-item">
+                    <strong>🎯 Tasa de satisfacción:</strong> {{ reporte.porcentaje_positivos }}%
+                </div>
+                <div class="resumen-item">
+                    <strong>⚠️ Tasa de insatisfacción:</strong> {{ reporte.porcentaje_negativos }}%
+                </div>
+                <div class="resumen-item">
+                    <strong>📈 Balance general:</strong> 
+                    <span style="color: {% if reporte.porcentaje_positivos > reporte.porcentaje_negativos %}#38ef7d{% elif reporte.porcentaje_positivos < reporte.porcentaje_negativos %}#f45c43{% else %}#666{% endif %}; font-weight: bold;">
+                        {{ (reporte.porcentaje_positivos - reporte.porcentaje_negativos)|round(2) }}%
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Filtrado de comentarios
+        function filtrarComentarios(sentimiento) {
+            const comentarios = document.querySelectorAll('.comentario-item');
+            const botones = document.querySelectorAll('.filtro-btn');
+            
+            // Actualizar botones activos
+            botones.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filtrar comentarios
+            comentarios.forEach(comentario => {
+                if (sentimiento === 'todos' || comentario.dataset.sentimiento === sentimiento) {
+                    comentario.style.display = 'block';
+                } else {
+                    comentario.style.display = 'none';
+                }
+            });
+        }
+        
+        // Establecer fecha actual
+        document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Smooth scroll para mejor UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 </html>

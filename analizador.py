@@ -1,5 +1,8 @@
 from textblob import TextBlob
 import re
+import matplotlib.pyplot as plt
+import io
+import base64
 
 class AnalizadorSentimientos:
     """
@@ -13,14 +16,18 @@ class AnalizadorSentimientos:
             'maravilloso', 'fantástico', 'súper', 'amor', 'amo', 'love',
             'calidad', 'rápido', 'eficiente', 'profesional', 'amable',
             'superó', 'expectativas', 'satisfecho', 'vale', 'pena', 'estrellas',
-            'recomiendo', 'felicitaciones', 'gracias', 'exito', 'hermoso'
+            'recomiendo', 'felicitaciones', 'gracias', 'exito', 'hermoso',
+            'agradable', 'satisfactorio', 'impresionante', 'brillante', 'notable',
+            'destacado', 'eficaz', 'útil', 'práctico', 'cómodo', 'barato', 'económico'
         }
         
         self.palabras_negativas = {
             'malo', 'mala', 'pésimo', 'pésima', 'horrible', 'terrible',
             'defectuoso', 'roto', 'nunca', 'jamás', 'peor', 'lento',
             'caro', 'estafa', 'fraude', 'decepción', 'decepcionante',
-            'problema', 'problemas', 'falla', 'defecto', 'insatisfecho'
+            'problema', 'problemas', 'falla', 'defecto', 'insatisfecho',
+            'deficiente', 'pobre', 'insuficiente', 'lamentable', 'desilusionado',
+            'frustrado', 'molesto', 'enojado', 'costoso', 'complicado', 'difícil'
         }
         
         # Palabras que indican neutralidad (no suman ni restan)
@@ -43,15 +50,19 @@ class AnalizadorSentimientos:
         # Negaciones que invierten el sentimiento
         self.negaciones = {'no', 'nunca', 'jamás', 'tampoco', 'sin'}
     
-    def detectar_negacion(self, texto, posicion_palabra):
+    def detectar_negacion(self, texto, palabra_objetivo):
         """
-        Detecta si hay una negación cerca de una palabra
+        Detecta si hay una negación cerca de una palabra específica
         """
         palabras = texto.lower().split()
-        if posicion_palabra > 0:
-            palabra_anterior = palabras[posicion_palabra - 1]
-            if palabra_anterior in self.negaciones:
-                return True
+        try:
+            idx = palabras.index(palabra_objetivo)
+            # Verificar las 2 palabras anteriores para negaciones
+            for i in range(max(0, idx-2), idx):
+                if palabras[i] in self.negaciones:
+                    return True
+        except ValueError:
+            return False
         return False
     
     def analizar_sentimiento(self, texto):
@@ -71,30 +82,29 @@ class AnalizadorSentimientos:
             if palabra_neutra in texto_lower:
                 tiene_palabras_neutras = True
         
-        # Palabras muy positivas valen más
-        for palabra in self.palabras_muy_positivas:
-            if palabra in texto_lower:
-                # Verificar si está negada (ej: "no es excelente")
-                if palabra in ' '.join(palabras):
-                    idx = palabras.index(palabra) if palabra in palabras else -1
-                    if idx > 0 and self.detectar_negacion(texto, idx):
-                        score_negativo += 2  # Invierte a negativo
-                    else:
-                        score_positivo += 2
-        
-        # Palabras positivas normales
-        for palabra in self.palabras_positivas:
-            if palabra in texto_lower:
-                score_positivo += 1
-        
-        # Palabras muy negativas
-        for palabra in self.palabras_muy_negativas:
-            if palabra in texto_lower:
+        # Analizar cada palabra individualmente para mejor precisión
+        for palabra in palabras:
+            palabra_limpia = re.sub(r'[^\w]', '', palabra)  # Limpiar puntuación
+            
+            if palabra_limpia in self.palabras_neutras:
+                tiene_palabras_neutras = True
+                
+            elif palabra_limpia in self.palabras_muy_positivas:
+                if self.detectar_negacion(texto_lower, palabra_limpia):
+                    score_negativo += 2  # Invierte a negativo
+                else:
+                    score_positivo += 2
+                    
+            elif palabra_limpia in self.palabras_positivas:
+                if self.detectar_negacion(texto_lower, palabra_limpia):
+                    score_negativo += 1
+                else:
+                    score_positivo += 1
+                    
+            elif palabra_limpia in self.palabras_muy_negativas:
                 score_negativo += 2
-        
-        # Palabras negativas normales
-        for palabra in self.palabras_negativas:
-            if palabra in texto_lower:
+                
+            elif palabra_limpia in self.palabras_negativas:
                 score_negativo += 1
         
         # Detectar signos de exclamación múltiples (intensifican el sentimiento)
@@ -116,10 +126,11 @@ class AnalizadorSentimientos:
         # Calcular score final
         score_final = score_positivo - score_negativo
         
-        # Calcular confianza
-        total_palabras = score_positivo + score_negativo
-        if total_palabras > 0:
-            confianza = (max(score_positivo, score_negativo) / total_palabras) * 100
+        # Calcular confianza (fórmula mejorada)
+        total_palabras_relevantes = score_positivo + score_negativo
+        if total_palabras_relevantes > 0:
+            diferencia = abs(score_positivo - score_negativo)
+            confianza = (diferencia / total_palabras_relevantes) * 100
         else:
             confianza = 0
         
@@ -204,9 +215,73 @@ def obtener_top_comentarios(resultados, tipo='positivos', cantidad=5):
         negativos_ordenados = sorted(negativos, key=lambda x: x['score'])
         return negativos_ordenados[:cantidad]
 
+def generar_grafico_pastel(reporte):
+    """
+    Genera un gráfico de pastel con los porcentajes de sentimientos
+    Retorna la imagen en base64 para mostrar en HTML
+    """
+    # Datos para el gráfico
+    labels = ['Positivos', 'Negativos', 'Neutros']
+    sizes = [
+        reporte['porcentaje_positivos'],
+        reporte['porcentaje_negativos'], 
+        reporte['porcentaje_neutros']
+    ]
+    colors = ['#38ef7d', '#f45c43', '#bdc3c7']
+    explode = (0.05, 0.05, 0.05)  # Separar ligeramente las porciones
+    
+    # Crear gráfico
+    plt.figure(figsize=(8, 6))
+    plt.pie(sizes, explode=explode, labels=labels, colors=colors, 
+            autopct='%1.1f%%', shadow=True, startangle=90)
+    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    plt.title('Distribución de Sentimientos', fontsize=16, fontweight='bold')
+    
+    # Convertir a base64 para HTML
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
+    img.seek(0)
+    graph_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
+    
+    return f"data:image/png;base64,{graph_url}"
+
+def generar_grafico_barras(reporte):
+    """
+    Genera un gráfico de barras con los conteos de sentimientos
+    """
+    labels = ['Positivos', 'Negativos', 'Neutros']
+    counts = [
+        reporte['positivos'],
+        reporte['negativos'], 
+        reporte['neutros']
+    ]
+    colors = ['#38ef7d', '#f45c43', '#bdc3c7']
+    
+    plt.figure(figsize=(8, 6))
+    bars = plt.bar(labels, counts, color=colors, alpha=0.8)
+    
+    # Agregar valores en las barras
+    for bar, count in zip(bars, counts):
+        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
+                f'{count}', ha='center', va='bottom', fontweight='bold')
+    
+    plt.title('Cantidad de Comentarios por Sentimiento', fontsize=16, fontweight='bold')
+    plt.ylabel('Cantidad de Comentarios')
+    plt.grid(axis='y', alpha=0.3)
+    
+    # Convertir a base64
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
+    img.seek(0)
+    graph_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
+    
+    return f"data:image/png;base64,{graph_url}"
+
 def generar_datos_grafico(reporte):
     """
-    Genera datos para el gráfico de pastel
+    Genera datos para el gráfico de pastel (función legacy)
     """
     labels = ['Positivos', 'Negativos', 'Neutros']
     values = [
@@ -221,3 +296,23 @@ def generar_datos_grafico(reporte):
         'values': values,
         'colors': colors
     }
+
+# Función para probar el analizador
+if __name__ == "__main__":
+    # Pruebas básicas
+    analizador = AnalizadorSentimientos()
+    
+    comentarios_prueba = [
+        "Excelente producto, me encantó la calidad",
+        "Pésimo servicio, nunca más vuelvo",
+        "Está bien, cumple su función",
+        "No me gustó para nada, muy decepcionante",
+        "Increíble atención, superó mis expectativas"
+    ]
+    
+    print("🔍 Probando analizador de sentimientos...")
+    for comentario in comentarios_prueba:
+        resultado = analizador.analizar_sentimiento(comentario)
+        print(f"\n📝 Comentario: {comentario}")
+        print(f"🎯 Sentimiento: {resultado['sentimiento']} {resultado['emoji']}")
+        print(f"📊 Score: {resultado['score']} | Confianza: {resultado['confianza']}%")

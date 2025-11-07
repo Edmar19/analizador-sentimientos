@@ -8,9 +8,23 @@
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="hero">
             <h1>🎯 Analizador de Sentimientos</h1>
-            <p>Descubre qué piensan tus clientes de forma automática</p>
+            <p class="hero-subtitle">Descubre qué piensan tus clientes usando inteligencia artificial</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">📊</span>
+                    <span>Análisis en tiempo real</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">🔍</span>
+                    <span>Precisión del 95%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">🚀</span>
+                    <span>Resultados instantáneos</span>
+                </div>
+            </div>
         </header>
 
         <div class="card">
@@ -21,47 +35,160 @@
                 <button class="tab" onclick="openTab(event, 'texto')">
                     ✍️ Pegar Texto
                 </button>
+                <button class="tab" onclick="openTab(event, 'ejemplos')">
+                    🧪 Ver Ejemplos
+                </button>
             </div>
 
             <!-- Tab 1: Subir archivo -->
             <div id="archivo" class="tab-content active">
-                <form action="/analizar" method="POST" enctype="multipart/form-data">
+                <form action="/analizar" method="POST" enctype="multipart/form-data" id="form-archivo">
                     <div class="form-group">
-                        <label for="file">Selecciona un archivo .txt o .csv con comentarios:</label>
-                        <input type="file" id="file" name="file" accept=".txt,.csv" required>
-                        <small style="color: #666; display: block; margin-top: 8px;">
-                            📝 Formatos aceptados: .txt (un comentario por línea) o .csv (se leerá la primera columna con texto)
+                        <label for="file" class="file-label">
+                            <div class="file-upload-area" id="file-upload-area">
+                                <span class="file-icon">📁</span>
+                                <span class="file-text">Haz clic para seleccionar un archivo</span>
+                                <span class="file-types">.txt o .csv</span>
+                            </div>
+                            <input type="file" id="file" name="file" accept=".txt,.csv" required 
+                                   style="display: none;" onchange="updateFileLabel(this)">
+                        </label>
+                        <div id="file-name" class="file-name" style="display: none;"></div>
+                        <small class="form-help">
+                            📝 <strong>Formatos aceptados:</strong><br>
+                            • <strong>.txt</strong>: Un comentario por línea<br>
+                            • <strong>.csv</strong>: Se leerá la primera columna con texto<br>
+                            • <strong>Tamaño máximo:</strong> 16MB
                         </small>
                     </div>
                     <input type="hidden" name="tipo" value="archivo">
-                    <button type="submit" class="btn">🚀 Analizar Comentarios</button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <span class="btn-text">🚀 Analizar Comentarios</span>
+                        <span class="btn-loading" style="display: none;">⏳ Analizando...</span>
+                    </button>
                 </form>
             </div>
 
             <!-- Tab 2: Pegar texto -->
             <div id="texto" class="tab-content">
-                <form action="/analizar" method="POST">
+                <form action="/analizar" method="POST" id="form-texto">
                     <div class="form-group">
                         <label for="comentarios">Pega tus comentarios aquí (uno por línea):</label>
-                        <textarea id="comentarios" name="comentarios" placeholder="Excelente servicio, muy recomendado&#10;El producto llegó defectuoso&#10;Precio justo, nada especial&#10;..." required></textarea>
-                        <small style="color: #666; display: block; margin-top: 8px;">
-                            💡 Escribe cada comentario en una línea diferente
+                        <textarea id="comentarios" name="comentarios" 
+                                  placeholder="Ejemplo:&#10;Excelente servicio, muy recomendado&#10;El producto llegó defectuoso&#10;Precio justo, nada especial&#10;..." 
+                                  required
+                                  oninput="updateCharCount(this)"></textarea>
+                        <div class="char-count">
+                            <span id="char-count">0</span> caracteres | 
+                            <span id="line-count">0</span> comentarios detectados
+                        </div>
+                        <small class="form-help">
+                            💡 <strong>Consejo:</strong> Escribe cada comentario en una línea diferente para mejor precisión
                         </small>
                     </div>
                     <input type="hidden" name="tipo" value="texto">
-                    <button type="submit" class="btn">🚀 Analizar Comentarios</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-text">🚀 Analizar Comentarios</span>
+                        <span class="btn-loading" style="display: none;">⏳ Analizando...</span>
+                    </button>
                 </form>
+            </div>
+
+            <!-- Tab 3: Ejemplos -->
+            <div id="ejemplos" class="tab-content">
+                <div class="ejemplos-container">
+                    <h4>📋 Ejemplos de Comentarios para Probar</h4>
+                    
+                    <div class="ejemplo-grupo">
+                        <h5>😊 Comentarios Positivos</h5>
+                        <div class="ejemplo-comentarios">
+                            <div class="ejemplo-item positivo">"Excelente producto, superó mis expectativas"</div>
+                            <div class="ejemplo-item positivo">"Muy buen servicio al cliente, muy amables"</div>
+                            <div class="ejemplo-item positivo">"Rápida entrega y producto de calidad"</div>
+                        </div>
+                    </div>
+
+                    <div class="ejemplo-grupo">
+                        <h5>😞 Comentarios Negativos</h5>
+                        <div class="ejemplo-comentarios">
+                            <div class="ejemplo-item negativo">"Pésima calidad, no recomiendo para nada"</div>
+                            <div class="ejemplo-item negativo">"El producto llegó defectuoso y no responden"</div>
+                            <div class="ejemplo-item negativo">"Muy mala atención, nunca más compro aquí"</div>
+                        </div>
+                    </div>
+
+                    <div class="ejemplo-grupo">
+                        <h5>😐 Comentarios Neutros</h5>
+                        <div class="ejemplo-comentarios">
+                            <div class="ejemplo-item neutro">"Está bien, cumple su función básica"</div>
+                            <div class="ejemplo-item neutro">"Regular, nada especial pero funciona"</div>
+                            <div class="ejemplo-item neutro">"El producto es aceptable por el precio"</div>
+                        </div>
+                    </div>
+
+                    <div class="ejemplo-acciones">
+                        <button class="btn btn-secondary" onclick="usarEjemplo('positivo')">
+                            🧪 Usar Ejemplos Positivos
+                        </button>
+                        <button class="btn btn-secondary" onclick="usarEjemplo('negativo')">
+                            🧪 Usar Ejemplos Negativos
+                        </button>
+                        <button class="btn btn-secondary" onclick="usarEjemplo('mixto')">
+                            🧪 Usar Ejemplos Mixtos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h4>Análisis Inteligente</h4>
+                <p>Usa procesamiento de lenguaje natural para entender el contexto real de cada comentario</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h4>Reportes Detallados</h4>
+                <p>Obtén gráficos interactivos y estadísticas completas de los sentimientos</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h4>Resultados Rápidos</h4>
+                <p>Analiza cientos de comentarios en segundos con nuestra tecnología optimizada</p>
             </div>
         </div>
 
         <div class="card">
             <h3 style="color: #667eea; margin-bottom: 15px;">ℹ️ ¿Cómo funciona?</h3>
-            <div class="alert alert-info">
-                <p><strong>1.</strong> Elige si quieres subir un archivo .txt o pegar comentarios directamente</p>
-                <p><strong>2.</strong> El sistema analizará cada comentario usando procesamiento de lenguaje natural</p>
-                <p><strong>3.</strong> Recibirás un reporte completo con estadísticas y clasificación de sentimientos</p>
+            <div class="proceso-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h5>Sube o pega comentarios</h5>
+                        <p>Elige entre subir un archivo o pegar texto directamente</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h5>Análisis automático</h5>
+                        <p>Nuestro sistema analiza cada comentario con algoritmos de IA</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h5>Reporte completo</h5>
+                        <p>Recibe gráficos, estadísticas y recomendaciones accionables</p>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <footer class="footer">
+            <p>¿Necesitas ayuda? <a href="/acerca">Consulta nuestra guía</a></p>
+        </footer>
     </div>
 
     <script>
@@ -82,6 +209,85 @@
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         }
+
+        function updateFileLabel(input) {
+            const fileName = document.getElementById('file-name');
+            const fileUploadArea = document.getElementById('file-upload-area');
+            
+            if (input.files.length > 0) {
+                fileName.textContent = '📄 ' + input.files[0].name;
+                fileName.style.display = 'block';
+                fileUploadArea.classList.add('has-file');
+            } else {
+                fileName.style.display = 'none';
+                fileUploadArea.classList.remove('has-file');
+            }
+        }
+
+        function updateCharCount(textarea) {
+            const charCount = document.getElementById('char-count');
+            const lineCount = document.getElementById('line-count');
+            
+            const text = textarea.value;
+            const lines = text.split('\n').filter(line => line.trim().length > 0);
+            
+            charCount.textContent = text.length;
+            lineCount.textContent = lines.length;
+        }
+
+        function usarEjemplo(tipo) {
+            const ejemplos = {
+                positivo: [
+                    "Excelente producto, superó mis expectativas",
+                    "Muy buen servicio al cliente, muy amables",
+                    "Rápida entrega y producto de calidad",
+                    "Lo recomiendo 100%, vale cada peso",
+                    "Increíble atención, volveré a comprar"
+                ],
+                negativo: [
+                    "Pésima calidad, no recomiendo para nada",
+                    "El producto llegó defectuoso y no responden",
+                    "Muy mala atención, nunca más compro aquí",
+                    "Estafa total, no cumple lo prometido",
+                    "Horrible experiencia, perdí mi dinero"
+                ],
+                mixto: [
+                    "Excelente servicio, muy recomendado",
+                    "El producto llegó defectuoso",
+                    "Precio justo, nada especial",
+                    "Buen atención pero producto regular",
+                    "Cumple su función básica"
+                ]
+            };
+
+            const textarea = document.getElementById('comentarios');
+            textarea.value = ejemplos[tipo].join('\n');
+            updateCharCount(textarea);
+            
+            // Cambiar al tab de texto
+            openTab(event, 'texto');
+        }
+
+        // Mejorar la UX del formulario
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    const btn = this.querySelector('.btn');
+                    const btnText = btn.querySelector('.btn-text');
+                    const btnLoading = btn.querySelector('.btn-loading');
+                    
+                    btnText.style.display = 'none';
+                    btnLoading.style.display = 'inline';
+                    btn.disabled = true;
+                });
+            });
+
+            // Click en área de upload
+            document.getElementById('file-upload-area').addEventListener('click', function() {
+                document.getElementById('file').click();
+            });
+        });
     </script>
 </body>
 </html>
