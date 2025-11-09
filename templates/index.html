@@ -54,12 +54,23 @@
                                    style="display: none;" onchange="updateFileLabel(this)">
                         </label>
                         <div id="file-name" class="file-name" style="display: none;"></div>
-                        <small class="form-help">
-                            📝 <strong>Formatos aceptados:</strong><br>
-                            • <strong>.txt</strong>: Un comentario por línea<br>
-                            • <strong>.csv</strong>: Se leerá la primera columna con texto<br>
-                            • <strong>Tamaño máximo:</strong> 16MB
-                        </small>
+                            <div class="form-help">
+                                <div class="form-help-header">📝 Formatos aceptados:</div>
+                                <div class="form-help-items">
+                                    <div class="form-help-item">
+                                        <span class="form-help-bullet">•</span>
+                                        <span><strong>.txt</strong>: Un comentario por línea</span>
+                                    </div>
+                                    <div class="form-help-item">
+                                        <span class="form-help-bullet">•</span>
+                                        <span><strong>.csv</strong>: Se leerá la primera columna con texto</span>
+                                    </div>
+                                    <div class="form-help-item">
+                                        <span class="form-help-bullet">•</span>
+                                        <span><strong>Tamaño máximo:</strong> 16MB</span>
+                                    </div>
+                                </div>
+                            </div>
                     </div>
                     <input type="hidden" name="tipo" value="archivo">
                     <button type="submit" class="btn btn-primary" id="submit-btn">

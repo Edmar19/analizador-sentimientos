@@ -691,3 +691,40 @@ textarea:focus {
         padding: 30px 15px;
     }
 }
+
+/* ESTILOS ESPECÍFICOS PARA EL PROBLEMA DEL FORM-HELP */
+.form-help {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    margin-top: 20px;
+    line-height: 1.8 !important;
+}
+
+.form-help strong {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.form-help br {
+    margin-bottom: 8px;
+    display: block;
+    content: "";
+}
+
+/* Asegurar que los elementos tengan suficiente espacio */
+.file-upload-area {
+    margin-bottom: 15px;
+}
+
+.file-name {
+    margin-bottom: 10px;
+}
+
+/* Espaciado específico para el grupo de formulario de archivo */
+#archivo .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
