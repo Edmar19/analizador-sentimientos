@@ -4,103 +4,517 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analizador de Sentimientos - PyMES</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+        }
+
+        .hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-icon {
+            font-size: 2em;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05em;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        /* File Upload - NUEVO DISEÑO SIMPLE */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 50px 30px;
+            background: #f8f9ff;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .file-input-label.has-file {
+            background: #f0fff4;
+            border-color: #38ef7d;
+            border-style: solid;
+        }
+
+        .file-icon {
+            font-size: 3.5em;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .file-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .file-types {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .file-selected-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            border-left: 4px solid #38ef7d;
+            display: none;
+        }
+
+        .file-selected-info.show {
+            display: block;
+        }
+
+        .file-selected-name {
+            font-weight: 600;
+            color: #2d5016;
+            font-size: 1.05em;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 16px 35px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-loading {
+            display: none;
+        }
+
+        /* Help Text */
+        .form-help {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            margin-top: 20px;
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        .form-help-header {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .form-help-item {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-help-item strong {
+            color: #333;
+        }
+
+        /* Ejemplos */
+        .ejemplos-container h4 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.4em;
+        }
+
+        .ejemplo-grupo {
+            margin-bottom: 30px;
+        }
+
+        .ejemplo-grupo h5 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 1.1em;
+        }
+
+        .ejemplo-item {
+            padding: 15px 18px;
+            border-radius: 10px;
+            border-left: 4px solid;
+            margin-bottom: 12px;
+            cursor: default;
+            transition: all 0.3s;
+            font-size: 0.98em;
+        }
+
+        .ejemplo-item:hover {
+            transform: translateX(8px);
+        }
+
+        .ejemplo-item.positivo {
+            border-left-color: #38ef7d;
+            background: #f0fff4;
+        }
+
+        .ejemplo-item.negativo {
+            border-left-color: #f45c43;
+            background: #fff5f5;
+        }
+
+        .ejemplo-item.neutro {
+            border-left-color: #bdc3c7;
+            background: #f8f9fa;
+        }
+
+        .ejemplo-acciones {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .ejemplo-acciones .btn {
+            width: auto;
+            min-width: 200px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 1.05em;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1em;
+            }
+
+            .hero-stats {
+                gap: 25px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                width: 100%;
+                text-align: center;
+            }
+
+            .ejemplo-acciones {
+                flex-direction: column;
+            }
+
+            .ejemplo-acciones .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <header class="hero">
             <h1>🎯 Analizador de Sentimientos</h1>
             <p class="hero-subtitle">Descubre qué piensan tus clientes usando inteligencia artificial</p>
             <div class="hero-stats">
                 <div class="stat">
-                    <span class="stat-number">📊</span>
+                    <span class="stat-icon">📊</span>
                     <span>Análisis en tiempo real</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">🔍</span>
+                    <span class="stat-icon">🔍</span>
                     <span>Precisión del 95%</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">🚀</span>
+                    <span class="stat-icon">🚀</span>
                     <span>Resultados instantáneos</span>
                 </div>
             </div>
         </header>
 
+        <!-- Main Card -->
         <div class="card">
+            <!-- Tabs -->
             <div class="tabs">
-                <button class="tab active" onclick="openTab(event, 'archivo')">
-                    📁 Subir Archivo
-                </button>
-                <button class="tab" onclick="openTab(event, 'texto')">
-                    ✍️ Pegar Texto
-                </button>
-                <button class="tab" onclick="openTab(event, 'ejemplos')">
-                    🧪 Ver Ejemplos
-                </button>
+                <button class="tab active" data-tab="archivo">📁 Subir Archivo</button>
+                <button class="tab" data-tab="texto">✏️ Pegar Texto</button>
+                <button class="tab" data-tab="ejemplos">🧪 Ver Ejemplos</button>
             </div>
 
-            <!-- Tab 1: Subir archivo -->
+            <!-- Tab 1: Subir Archivo -->
             <div id="archivo" class="tab-content active">
                 <form action="/analizar" method="POST" enctype="multipart/form-data" id="form-archivo">
                     <div class="form-group">
-                        <label for="file" class="file-label">
-                            <div class="file-upload-area" id="file-upload-area">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="file-input" name="file" accept=".txt,.csv" required>
+                            <label for="file-input" class="file-input-label" id="file-label">
                                 <span class="file-icon">📁</span>
                                 <span class="file-text">Haz clic para seleccionar un archivo</span>
                                 <span class="file-types">.txt o .csv</span>
-                            </div>
-                            <input type="file" id="file" name="file" accept=".txt,.csv" required 
-                                   style="display: none;" onchange="updateFileLabel(this)">
-                        </label>
-                        <div id="file-name" class="file-name" style="display: none;"></div>
-                            <div class="form-help">
-                                <div class="form-help-header">📝 Formatos aceptados:</div>
-                                <div class="form-help-items">
-                                    <div class="form-help-item">
-                                        <span class="form-help-bullet">•</span>
-                                        <span><strong>.txt</strong>: Un comentario por línea</span>
-                                    </div>
-                                    <div class="form-help-item">
-                                        <span class="form-help-bullet">•</span>
-                                        <span><strong>.csv</strong>: Se leerá la primera columna con texto</span>
-                                    </div>
-                                    <div class="form-help-item">
-                                        <span class="form-help-bullet">•</span>
-                                        <span><strong>Tamaño máximo:</strong> 16MB</span>
-                                    </div>
-                                </div>
-                            </div>
+                            </label>
+                        </div>
+                        
+                        <div class="file-selected-info" id="file-info">
+                            <span class="file-selected-name" id="file-name"></span>
+                        </div>
+
+                        <div class="form-help">
+                            <div class="form-help-header">📋 Formatos aceptados:</div>
+                            <div class="form-help-item">• <strong>.txt</strong>: Un comentario por línea</div>
+                            <div class="form-help-item">• <strong>.csv</strong>: Se leerá la primera columna con texto</div>
+                            <div class="form-help-item">• <strong>Tamaño máximo:</strong> 16MB</div>
+                        </div>
                     </div>
+
                     <input type="hidden" name="tipo" value="archivo">
-                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                    <button type="submit" class="btn btn-primary">
                         <span class="btn-text">🚀 Analizar Comentarios</span>
-                        <span class="btn-loading" style="display: none;">⏳ Analizando...</span>
+                        <span class="btn-loading">⏳ Analizando...</span>
                     </button>
                 </form>
             </div>
 
-            <!-- Tab 2: Pegar texto -->
+            <!-- Tab 2: Pegar Texto -->
             <div id="texto" class="tab-content">
                 <form action="/analizar" method="POST" id="form-texto">
                     <div class="form-group">
                         <label for="comentarios">Pega tus comentarios aquí (uno por línea):</label>
-                        <textarea id="comentarios" name="comentarios" 
-                                  placeholder="Ejemplo:&#10;Excelente servicio, muy recomendado&#10;El producto llegó defectuoso&#10;Precio justo, nada especial&#10;..." 
-                                  required
-                                  oninput="updateCharCount(this)"></textarea>
+                        <textarea 
+                            id="comentarios" 
+                            name="comentarios" 
+                            placeholder="Ejemplo:&#10;Excelente servicio, muy recomendado&#10;El producto llegó defectuoso&#10;Precio justo, nada especial" 
+                            required></textarea>
                         <div class="char-count">
                             <span id="char-count">0</span> caracteres | 
                             <span id="line-count">0</span> comentarios detectados
                         </div>
-                        <small class="form-help">
+                        <div class="form-help" style="margin-top: 15px;">
                             💡 <strong>Consejo:</strong> Escribe cada comentario en una línea diferente para mejor precisión
-                        </small>
+                        </div>
                     </div>
                     <input type="hidden" name="tipo" value="texto">
                     <button type="submit" class="btn btn-primary">
                         <span class="btn-text">🚀 Analizar Comentarios</span>
-                        <span class="btn-loading" style="display: none;">⏳ Analizando...</span>
+                        <span class="btn-loading">⏳ Analizando...</span>
                     </button>
                 </form>
             </div>
@@ -112,191 +526,142 @@
                     
                     <div class="ejemplo-grupo">
                         <h5>😊 Comentarios Positivos</h5>
-                        <div class="ejemplo-comentarios">
-                            <div class="ejemplo-item positivo">"Excelente producto, superó mis expectativas"</div>
-                            <div class="ejemplo-item positivo">"Muy buen servicio al cliente, muy amables"</div>
-                            <div class="ejemplo-item positivo">"Rápida entrega y producto de calidad"</div>
-                        </div>
+                        <div class="ejemplo-item positivo">"Excelente producto, superó mis expectativas"</div>
+                        <div class="ejemplo-item positivo">"Muy buen servicio al cliente, muy amables"</div>
+                        <div class="ejemplo-item positivo">"Rápida entrega y producto de calidad"</div>
                     </div>
 
                     <div class="ejemplo-grupo">
                         <h5>😞 Comentarios Negativos</h5>
-                        <div class="ejemplo-comentarios">
-                            <div class="ejemplo-item negativo">"Pésima calidad, no recomiendo para nada"</div>
-                            <div class="ejemplo-item negativo">"El producto llegó defectuoso y no responden"</div>
-                            <div class="ejemplo-item negativo">"Muy mala atención, nunca más compro aquí"</div>
-                        </div>
+                        <div class="ejemplo-item negativo">"Pésima calidad, no recomiendo para nada"</div>
+                        <div class="ejemplo-item negativo">"El producto llegó defectuoso y no responden"</div>
+                        <div class="ejemplo-item negativo">"Muy mala atención, nunca más compro aquí"</div>
                     </div>
 
                     <div class="ejemplo-grupo">
                         <h5>😐 Comentarios Neutros</h5>
-                        <div class="ejemplo-comentarios">
-                            <div class="ejemplo-item neutro">"Está bien, cumple su función básica"</div>
-                            <div class="ejemplo-item neutro">"Regular, nada especial pero funciona"</div>
-                            <div class="ejemplo-item neutro">"El producto es aceptable por el precio"</div>
-                        </div>
+                        <div class="ejemplo-item neutro">"Está bien, cumple su función básica"</div>
+                        <div class="ejemplo-item neutro">"Regular, nada especial pero funciona"</div>
+                        <div class="ejemplo-item neutro">"El producto es aceptable por el precio"</div>
                     </div>
 
                     <div class="ejemplo-acciones">
-                        <button class="btn btn-secondary" onclick="usarEjemplo('positivo')">
-                            🧪 Usar Ejemplos Positivos
-                        </button>
-                        <button class="btn btn-secondary" onclick="usarEjemplo('negativo')">
-                            🧪 Usar Ejemplos Negativos
-                        </button>
-                        <button class="btn btn-secondary" onclick="usarEjemplo('mixto')">
-                            🧪 Usar Ejemplos Mixtos
-                        </button>
+                        <button class="btn btn-secondary" data-ejemplo="positivo">🧪 Usar Ejemplos Positivos</button>
+                        <button class="btn btn-secondary" data-ejemplo="negativo">🧪 Usar Ejemplos Negativos</button>
+                        <button class="btn btn-secondary" data-ejemplo="mixto">🧪 Usar Ejemplos Mixtos</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🤖</div>
-                <h4>Análisis Inteligente</h4>
-                <p>Usa procesamiento de lenguaje natural para entender el contexto real de cada comentario</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📈</div>
-                <h4>Reportes Detallados</h4>
-                <p>Obtén gráficos interactivos y estadísticas completas de los sentimientos</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h4>Resultados Rápidos</h4>
-                <p>Analiza cientos de comentarios en segundos con nuestra tecnología optimizada</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3 style="color: #667eea; margin-bottom: 15px;">ℹ️ ¿Cómo funciona?</h3>
-            <div class="proceso-steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h5>Sube o pega comentarios</h5>
-                        <p>Elige entre subir un archivo o pegar texto directamente</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h5>Análisis automático</h5>
-                        <p>Nuestro sistema analiza cada comentario con algoritmos de IA</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h5>Reporte completo</h5>
-                        <p>Recibe gráficos, estadísticas y recomendaciones accionables</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- Footer -->
         <footer class="footer">
             <p>¿Necesitas ayuda? <a href="/acerca">Consulta nuestra guía</a></p>
         </footer>
     </div>
 
     <script>
-        function openTab(evt, tabName) {
-            // Ocultar todos los contenidos
-            var tabcontent = document.getElementsByClassName("tab-content");
-            for (var i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].classList.remove("active");
-            }
-            
-            // Remover clase active de todos los tabs
-            var tabs = document.getElementsByClassName("tab");
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove("active");
-            }
-            
-            // Mostrar el tab seleccionado
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
+        // Sistema de Tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                
+                // Remover active de todos los tabs y contenidos
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                
+                // Activar tab y contenido seleccionado
+                this.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
 
-        function updateFileLabel(input) {
-            const fileName = document.getElementById('file-name');
-            const fileUploadArea = document.getElementById('file-upload-area');
-            
-            if (input.files.length > 0) {
-                fileName.textContent = '📄 ' + input.files[0].name;
-                fileName.style.display = 'block';
-                fileUploadArea.classList.add('has-file');
+        // File Input Handler
+        const fileInput = document.getElementById('file-input');
+        const fileLabel = document.getElementById('file-label');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const sizeKB = Math.round(file.size / 1024);
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                const displaySize = sizeKB > 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+                
+                fileName.textContent = `📄 ${file.name} — ${displaySize}`;
+                fileInfo.classList.add('show');
+                fileLabel.classList.add('has-file');
             } else {
-                fileName.style.display = 'none';
-                fileUploadArea.classList.remove('has-file');
+                fileInfo.classList.remove('show');
+                fileLabel.classList.remove('has-file');
             }
-        }
+        });
 
-        function updateCharCount(textarea) {
-            const charCount = document.getElementById('char-count');
-            const lineCount = document.getElementById('line-count');
-            
-            const text = textarea.value;
+        // Textarea Character Count
+        const textarea = document.getElementById('comentarios');
+        const charCount = document.getElementById('char-count');
+        const lineCount = document.getElementById('line-count');
+
+        textarea.addEventListener('input', function() {
+            const text = this.value;
             const lines = text.split('\n').filter(line => line.trim().length > 0);
             
             charCount.textContent = text.length;
             lineCount.textContent = lines.length;
-        }
+        });
 
-        function usarEjemplo(tipo) {
-            const ejemplos = {
-                positivo: [
-                    "Excelente producto, superó mis expectativas",
-                    "Muy buen servicio al cliente, muy amables",
-                    "Rápida entrega y producto de calidad",
-                    "Lo recomiendo 100%, vale cada peso",
-                    "Increíble atención, volveré a comprar"
-                ],
-                negativo: [
-                    "Pésima calidad, no recomiendo para nada",
-                    "El producto llegó defectuoso y no responden",
-                    "Muy mala atención, nunca más compro aquí",
-                    "Estafa total, no cumple lo prometido",
-                    "Horrible experiencia, perdí mi dinero"
-                ],
-                mixto: [
-                    "Excelente servicio, muy recomendado",
-                    "El producto llegó defectuoso",
-                    "Precio justo, nada especial",
-                    "Buen atención pero producto regular",
-                    "Cumple su función básica"
-                ]
-            };
+        // Ejemplos Buttons
+        const ejemplos = {
+            positivo: [
+                "Excelente producto, superó mis expectativas",
+                "Muy buen servicio al cliente, muy amables",
+                "Rápida entrega y producto de calidad",
+                "Lo recomiendo 100%, vale cada peso",
+                "Increíble atención, volveré a comprar"
+            ],
+            negativo: [
+                "Pésima calidad, no recomiendo para nada",
+                "El producto llegó defectuoso y no responden",
+                "Muy mala atención, nunca más compro aquí",
+                "Estafa total, no cumple lo prometido",
+                "Horrible experiencia, perdí mi dinero"
+            ],
+            mixto: [
+                "Excelente servicio, muy recomendado",
+                "El producto llegó defectuoso",
+                "Precio justo, nada especial",
+                "Buena atención pero producto regular",
+                "Cumple su función básica"
+            ]
+        };
 
-            const textarea = document.getElementById('comentarios');
-            textarea.value = ejemplos[tipo].join('\n');
-            updateCharCount(textarea);
-            
-            // Cambiar al tab de texto
-            openTab(event, 'texto');
-        }
-
-        // Mejorar la UX del formulario
-        document.addEventListener('DOMContentLoaded', function() {
-            const forms = document.querySelectorAll('form');
-            forms.forEach(form => {
-                form.addEventListener('submit', function() {
-                    const btn = this.querySelector('.btn');
-                    const btnText = btn.querySelector('.btn-text');
-                    const btnLoading = btn.querySelector('.btn-loading');
-                    
-                    btnText.style.display = 'none';
-                    btnLoading.style.display = 'inline';
-                    btn.disabled = true;
-                });
+        document.querySelectorAll('[data-ejemplo]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tipo = this.getAttribute('data-ejemplo');
+                textarea.value = ejemplos[tipo].join('\n');
+                
+                // Actualizar contadores
+                const text = textarea.value;
+                const lines = text.split('\n').filter(line => line.trim().length > 0);
+                charCount.textContent = text.length;
+                lineCount.textContent = lines.length;
+                
+                // Cambiar al tab de texto
+                document.querySelector('.tab[data-tab="texto"]').click();
             });
+        });
 
-            // Click en área de upload
-            document.getElementById('file-upload-area').addEventListener('click', function() {
-                document.getElementById('file').click();
+        // Form Submit - Loading State
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const btn = this.querySelector('.btn-primary');
+                const btnText = btn.querySelector('.btn-text');
+                const btnLoading = btn.querySelector('.btn-loading');
+                
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+                btn.disabled = true;
             });
         });
     </script>
