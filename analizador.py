@@ -20,8 +20,8 @@ class AnalizadorSentimientos:
             'malo', 'mala', 'pésimo', 'pésima', 'horrible', 'terrible',
             'defectuoso', 'roto', 'nunca', 'jamás', 'peor', 'lento',
             'caro', 'estafa', 'fraude', 'decepción', 'decepcionante',
-            'problema', 'problemas', 'falla', 'defecto', 'insatisfecho'
-            'gustó', 'diferente', 'desilusion'
+            'problema', 'problemas', 'falla', 'defecto', 'insatisfecho',
+            'gustó', 'diferente', 'desilusion', 'engaño', 'rompió'
         }
         
         # Palabras que indican neutralidad (no suman ni restan)
@@ -43,6 +43,11 @@ class AnalizadorSentimientos:
         
         # Negaciones que invierten el sentimiento
         self.negaciones = {'no', 'nunca', 'jamás', 'tampoco', 'sin'}
+        
+        # Frases negativas completas
+        self.frases_negativas = {
+            'se rompió', 'mala calidad', 'no sirve', 'no funciona', 'no me gustó'
+        }
     
     def detectar_negacion(self, texto, palabra_objetivo):
         """
@@ -59,6 +64,25 @@ class AnalizadorSentimientos:
             pass
         return False
     
+    def en_contexto_negativo(self, texto, palabra):
+        """
+        Detecta si una palabra está en contexto negativo
+        Ej: "se rompió rápido" → "rápido" en contexto negativo
+        """
+        palabras = texto.lower().split()
+        try:
+            idx = palabras.index(palabra)
+            # Palabras que indican contexto negativo antes
+            indicadores_negativos = {'roto', 'rompió', 'mal', 'mala', 'malo', 'defectuoso', 'pésim'}
+            
+            # Revisar 2 palabras antes
+            for i in range(max(0, idx-2), idx):
+                if palabras[i] in indicadores_negativos:
+                    return True
+        except ValueError:
+            pass
+        return False
+    
     def analizar_sentimiento(self, texto):
         """
         Analiza el sentimiento de un texto en español
@@ -70,6 +94,11 @@ class AnalizadorSentimientos:
         score_positivo = 0
         score_negativo = 0
         tiene_palabras_neutras = False
+        
+        # Verificar frases negativas completas primero
+        for frase in self.frases_negativas:
+            if frase in texto_lower:
+                score_negativo += 2
         
         # Verificar si tiene palabras explícitamente neutras
         for palabra_neutra in self.palabras_neutras:
@@ -88,7 +117,10 @@ class AnalizadorSentimientos:
         # Palabras positivas normales
         for palabra in self.palabras_positivas:
             if palabra in texto_lower and palabra not in self.palabras_muy_positivas:
-                if self.detectar_negacion(texto_lower, palabra):
+                # Verificar si está en contexto negativo (ej: "se rompió rápido")
+                if self.en_contexto_negativo(texto_lower, palabra):
+                    score_negativo += 1
+                elif self.detectar_negacion(texto_lower, palabra):
                     score_negativo += 1  # Invierte a negativo
                 else:
                     score_positivo += 1
@@ -131,7 +163,7 @@ class AnalizadorSentimientos:
         
         # Clasificar sentimiento - UMBRAL MEJORADO
         # Si tiene palabras neutras explícitas y el score es bajo, clasificar como neutro
-        if tiene_palabras_neutras and abs(score_final) <= 2:  # CAMBIADO de 1 a 2
+        if tiene_palabras_neutras and abs(score_final) <= 2:
             sentimiento = 'Neutro'
             emoji = '😐'
         elif score_final > 0:
