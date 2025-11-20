@@ -21,6 +21,7 @@ class AnalizadorSentimientos:
             'defectuoso', 'roto', 'nunca', 'jamás', 'peor', 'lento',
             'caro', 'estafa', 'fraude', 'decepción', 'decepcionante',
             'problema', 'problemas', 'falla', 'defecto', 'insatisfecho'
+            'gustó', 'diferente', 'desilusion'
         }
         
         # Palabras que indican neutralidad (no suman ni restan)
@@ -37,7 +38,7 @@ class AnalizadorSentimientos:
         
         self.palabras_muy_negativas = {
             'pésimo', 'pésima', 'horrible', 'terrible', 'nunca más', 'estafa',
-            'fraude', 'desastre'
+            'fraude', 'desastre', 'engaño', 'desilusión'
         }
         
         # Negaciones que invierten el sentimiento
