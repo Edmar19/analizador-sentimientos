@@ -1,15 +1,18 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 import csv
-from analizador import procesar_comentarios_completos, generar_reporte
+from analizador import procesar_comentarios_completos, generar_reporte, generar_grafica_base64
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
-# Crear carpeta uploads si no existe
+# Crear carpetas necesarias si no existen
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
+
+if not os.path.exists('static/img'):
+    os.makedirs('static/img')
 
 @app.route('/')
 def index():
@@ -74,7 +77,13 @@ def analizar():
     resultados = procesar_comentarios_completos(comentarios)
     reporte = generar_reporte(resultados)
     
-    return render_template('resultados.html', resultados=resultados, reporte=reporte)
+    # Generar gráfica en formato base64
+    grafica_base64 = generar_grafica_base64(reporte)
+    
+    return render_template('resultados.html', 
+                         resultados=resultados, 
+                         reporte=reporte,
+                         grafica_base64=grafica_base64)
 
 # CONFIGURACIÓN CORREGIDA PARA RENDER
 if __name__ == '__main__':

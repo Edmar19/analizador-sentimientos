@@ -34,52 +34,165 @@
             </div>
         </div>
 
+        <!-- Gráfica de pastel -->
+        <div class="card">
+            <h3 style="color: #667eea; margin-bottom: 20px; text-align: center;">📈 Gráfica de Sentimientos</h3>
+            {% if grafica_base64 %}
+            <div style="display: flex; justify-content: center; padding: 20px; background: #f8f9ff; border-radius: 10px;">
+                <img src="{{ grafica_base64 }}" alt="Gráfica de Sentimientos" 
+                     style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            </div>
+            <div style="text-align: center; margin-top: 15px; color: #666;">
+                <p>📋 Distribución porcentual de los comentarios analizados</p>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px; color: #666; background: #f8f9ff; border-radius: 10px;">
+                <p style="font-size: 1.2em;">⚠️ No se pudo generar la gráfica</p>
+                <p>Los datos se muestran en las estadísticas superiores</p>
+            </div>
+            {% endif %}
+        </div>
+
         <!-- Sentimiento general -->
         <div class="card">
             <div class="sentiment-general">
-                <h3>📈 Sentimiento General</h3>
+                <h3>🎯 Resumen General</h3>
                 {% if reporte.porcentaje_positivos > reporte.porcentaje_negativos + 10 %}
                     <p><strong>🎉 Los clientes están SATISFECHOS</strong></p>
-                    <p>💡 Recomendación: Mantén la calidad de tu servicio/producto</p>
+                    <p>💡 Recomendación: Mantén la calidad de tu servicio/producto y comparte los comentarios positivos con tu equipo.</p>
                 {% elif reporte.porcentaje_negativos > reporte.porcentaje_positivos + 10 %}
                     <p><strong>⚠️ Los clientes están INSATISFECHOS</strong></p>
-                    <p>💡 Recomendación: Revisa urgentemente las áreas problemáticas</p>
+                    <p>💡 Recomendación: Revisa urgentemente las áreas problemáticas mencionadas en los comentarios negativos.</p>
                 {% else %}
                     <p><strong>🤔 Opiniones MIXTAS</strong></p>
-                    <p>💡 Recomendación: Identifica puntos de mejora específicos</p>
+                    <p>💡 Recomendación: Identifica puntos de mejora específicos y fortalece los aspectos positivos.</p>
                 {% endif %}
+                
+                <!-- Resumen numérico adicional -->
+                <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <p><strong>📈 Resumen Numérico:</strong></p>
+                    <p>• <span style="color: #38ef7d;">{{ reporte.positivos }} positivos</span> ({{ reporte.porcentaje_positivos }}%)</p>
+                    <p>• <span style="color: #f45c43;">{{ reporte.negativos }} negativos</span> ({{ reporte.porcentaje_negativos }}%)</p>
+                    <p>• <span style="color: #bdc3c7;">{{ reporte.neutros }} neutros</span> ({{ reporte.porcentaje_neutros }}%)</p>
+                </div>
             </div>
         </div>
 
         <!-- Lista de comentarios -->
         <div class="card">
-            <h3 style="color: #667eea; margin-bottom: 20px;">📝 Comentarios Analizados</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #667eea; margin: 0;">📝 Comentarios Analizados</h3>
+                <div style="background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">
+                    Total: {{ reporte.total }}
+                </div>
+            </div>
+            
             <div class="comentarios-list">
                 {% for resultado in resultados %}
                 <div class="comentario-item {{ resultado.sentimiento.lower() }}">
                     <div class="comentario-header">
-                        <span class="comentario-emoji">{{ resultado.emoji }}</span>
-                        <span class="comentario-badge badge-{{ resultado.sentimiento.lower() }}">
-                            {{ resultado.sentimiento }}
-                        </span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="comentario-emoji">{{ resultado.emoji }}</span>
+                            <span class="comentario-badge badge-{{ resultado.sentimiento.lower() }}">
+                                {{ resultado.sentimiento }}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.9em; color: #666;">
+                            #{{ resultado.id }}
+                        </div>
                     </div>
                     <div class="comentario-texto">
                         {{ resultado.comentario }}
                     </div>
                     <div class="comentario-score">
-                        Score: {{ resultado.score }} | Confianza: {{ resultado.confianza }}%
+                        <strong>Score:</strong> {{ resultado.score }} | 
+                        <strong>Confianza:</strong> {{ resultado.confianza }}%
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Botón para volver -->
-        <div class="card">
-            <a href="/" style="text-decoration: none;">
-                <button class="btn btn-secondary">🔙 Analizar Más Comentarios</button>
-            </a>
+        <!-- Botones de acción -->
+        <div class="card" style="text-align: center;">
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="/" style="text-decoration: none;">
+                    <button class="btn btn-secondary" style="width: auto; padding: 12px 25px;">
+                        🔙 Analizar Más Comentarios
+                    </button>
+                </a>
+                <button class="btn" onclick="window.print()" style="width: auto; padding: 12px 25px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    🖨️ Imprimir Reporte
+                </button>
+            </div>
+            
+            <!-- Información adicional -->
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9ff; border-radius: 8px; text-align: left;">
+                <p style="margin: 0; color: #666; font-size: 0.9em;">
+                    <strong>💡 Nota:</strong> El análisis se realiza automáticamente usando procesamiento de lenguaje natural. 
+                    Los resultados tienen una confianza promedio del 
+                    {% set confianzas = [r.confianza for r in resultados if r.confianza > 0] %}
+                    {% if confianzas %}
+                        {{ (confianzas | sum / confianzas | length) | round(1) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                    basada en el vocabulario detectado.
+                </p>
+            </div>
         </div>
     </div>
+
+    <style>
+        /* Estilos adicionales para mejorar la presentación */
+        @media print {
+            .btn {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+        
+        .comentario-item {
+            transition: all 0.3s ease;
+        }
+        
+        .comentario-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+
+    <script>
+        // Efectos adicionales para mejorar la experiencia de usuario
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animación suave al cargar los comentarios
+            const comentarios = document.querySelectorAll('.comentario-item');
+            comentarios.forEach((comentario, index) => {
+                comentario.style.opacity = '0';
+                comentario.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    comentario.style.transition = 'all 0.5s ease';
+                    comentario.style.opacity = '1';
+                    comentario.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+            
+            // Destacar comentarios con alta confianza
+            comentarios.forEach(comentario => {
+                const confianzaElement = comentario.querySelector('.comentario-score');
+                if (confianzaElement) {
+                    const confianzaText = confianzaElement.textContent;
+                    const confianzaMatch = confianzaText.match(/Confianza: (\d+)%/);
+                    if (confianzaMatch && parseInt(confianzaMatch[1]) > 80) {
+                        comentario.style.borderLeftWidth = '8px';
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

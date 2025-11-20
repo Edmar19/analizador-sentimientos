@@ -313,3 +313,271 @@ textarea:focus {
         flex-direction: column;
     }
 }
+/* ===== ESTILOS ADICIONALES PARA LA GRÁFICA Y MEJORAS VISUALES ===== */
+
+/* Contenedor de la gráfica */
+.grafica-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 20px 0;
+    text-align: center;
+}
+
+.grafica-titulo {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    font-weight: bold;
+}
+
+/* Mejoras para los badges de sentimiento */
+.comentario-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-positivo {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(56, 239, 125, 0.3);
+}
+
+.badge-negativo {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(244, 92, 67, 0.3);
+}
+
+.badge-neutro {
+    background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(189, 195, 199, 0.3);
+}
+
+/* Mejoras para los items de comentarios */
+.comentario-item {
+    transition: all 0.3s ease;
+    border-left: 5px solid #e0e0e0;
+}
+
+.comentario-item.positivo {
+    border-left-color: #38ef7d;
+    background: linear-gradient(135deg, #f8fff9 0%, #f0fdf4 100%);
+}
+
+.comentario-item.negativo {
+    border-left-color: #f45c43;
+    background: linear-gradient(135deg, #fff8f7 0%, #fef2f2 100%);
+}
+
+.comentario-item.neutro {
+    border-left-color: #bdc3c7;
+    background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+}
+
+.comentario-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Mejoras para el header de comentarios */
+.comentario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comentario-emoji {
+    font-size: 1.8em;
+    margin-right: 8px;
+}
+
+/* Estilos para el resumen numérico */
+.resumen-numerico {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    margin: 15px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.resumen-numerico p {
+    margin: 8px 0;
+    font-size: 1em;
+}
+
+/* Botones de acción mejorados */
+.btn-print {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.btn-print:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+}
+
+/* Contenedor de botones */
+.botones-accion {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+/* Información adicional */
+.info-adicional {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    border-left: 4px solid #667eea;
+}
+
+.info-adicional p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+/* Efectos de carga y animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.comentario-item {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Estilos para impresión */
+@media print {
+    .btn, .btn-print, .botones-accion {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+    
+    .comentario-item {
+        break-inside: avoid;
+        margin-bottom: 15px;
+    }
+    
+    .stats-grid {
+        break-inside: avoid;
+    }
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .grafica-container {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .grafica-titulo {
+        font-size: 1.2em;
+    }
+    
+    .comentario-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .botones-accion {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-print {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
+    
+    .comentario-badge {
+        font-size: 0.8em;
+        padding: 4px 12px;
+    }
+}
+
+/* Efectos de hover para las tarjetas de estadísticas */
+.stat-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* Mejora para el sentimiento general */
+.sentiment-general {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    border-left: 5px solid #667eea;
+    padding: 25px;
+    margin: 20px 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.sentiment-general h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sentiment-general h3::before {
+    content: "🎯";
+    font-size: 1.2em;
+}
+
+/* Estilos para la gráfica cuando no se puede generar */
+.grafica-error {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    background: #f8f9ff;
+    border-radius: 10px;
+    border: 2px dashed #bdc3c7;
+}
+
+.grafica-error p {
+    margin: 10px 0;
+    font-size: 1.1em;
+}

@@ -1,5 +1,9 @@
 from textblob import TextBlob
 import re
+import matplotlib.pyplot as plt
+import io
+import base64
+import os
 
 class AnalizadorSentimientos:
     """
@@ -38,7 +42,7 @@ class AnalizadorSentimientos:
             'erróneo', 'equivocado', 'deficiente', 'imperfecto', 'desastroso', 
             'catastrófico', 'desalentador', 'frustrante', 'molesto', 'irritante', 
             'fastidioso', 'engorroso', 'complicado', 'difícil', 'complejo', 
-            'confuso', 'ambiguo', 'incierto', 'dudoso', 'sospechoso', 'deshonesto', 
+            'confuso', 'ambiguous', 'incierto', 'dudoso', 'sospechoso', 'deshonesto', 
             'fraudulento', 'estafador', 'mediocre', 'pobre', 'basura', 'asco',
             'horrible', 'horrendo', 'repugnante', 'deplorable', 'lamentable'
         }
@@ -440,3 +444,119 @@ def generar_datos_grafico(reporte):
         'values': values,
         'colors': colors
     }
+
+
+def generar_grafica_pastel(reporte, filename='grafica_pastel.png'):
+    """
+    Genera una gráfica de pastel con los resultados y la guarda como imagen
+    """
+    try:
+        # Configurar estilo
+        plt.style.use('default')
+        fig, ax = plt.subplots(figsize=(10, 8))
+        
+        # Datos para la gráfica
+        labels = ['Positivos 😊', 'Negativos 😞', 'Neutros 😐']
+        sizes = [
+            reporte['porcentaje_positivos'],
+            reporte['porcentaje_negativos'], 
+            reporte['porcentaje_neutros']
+        ]
+        colors = ['#38ef7d', '#f45c43', '#bdc3c7']
+        explode = (0.05, 0.05, 0.05)  # Separar ligeramente las porciones
+        
+        # Crear gráfica de pastel
+        wedges, texts, autotexts = ax.pie(
+            sizes, explode=explode, labels=labels, colors=colors,
+            autopct='%1.1f%%', shadow=True, startangle=90,
+            textprops={'fontsize': 12, 'weight': 'bold'}
+        )
+        
+        # Mejorar los porcentajes
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontweight('bold')
+            autotext.set_fontsize(11)
+        
+        # Título
+        ax.set_title('Distribución de Sentimientos\n', fontsize=16, fontweight='bold', pad=20)
+        
+        # Hacer el círculo central blanco (pastel dona)
+        centre_circle = plt.Circle((0,0),0.70,fc='white')
+        fig.gca().add_artist(centre_circle)
+        
+        # Asegurar que sea un círculo perfecto
+        ax.axis('equal')
+        
+        # Leyenda
+        ax.legend(wedges, labels, title="Sentimientos", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+        
+        plt.tight_layout()
+        
+        # Guardar la imagen
+        img_path = os.path.join('static', 'img', filename)
+        os.makedirs(os.path.dirname(img_path), exist_ok=True)
+        plt.savefig(img_path, dpi=100, bbox_inches='tight', facecolor='white')
+        plt.close()
+        
+        return filename
+        
+    except Exception as e:
+        print(f"Error generando gráfica: {e}")
+        return None
+
+
+def generar_grafica_base64(reporte):
+    """
+    Genera una gráfica y la convierte a base64 para mostrar directamente en HTML
+    """
+    try:
+        # Configurar estilo
+        plt.style.use('default')
+        fig, ax = plt.subplots(figsize=(8, 6))
+        
+        # Datos
+        labels = ['Positivos 😊', 'Negativos 😞', 'Neutros 😐']
+        sizes = [
+            reporte['porcentaje_positivos'],
+            reporte['porcentaje_negativos'], 
+            reporte['porcentaje_neutros']
+        ]
+        colors = ['#38ef7d', '#f45c43', '#bdc3c7']
+        explode = (0.05, 0.05, 0.05)
+        
+        # Crear gráfica
+        wedges, texts, autotexts = ax.pie(
+            sizes, explode=explode, labels=labels, colors=colors,
+            autopct='%1.1f%%', shadow=True, startangle=90,
+            textprops={'fontsize': 10, 'weight': 'bold'}
+        )
+        
+        # Estilizar porcentajes
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontweight('bold')
+        
+        # Título
+        ax.set_title('Distribución de Sentimientos', fontsize=14, fontweight='bold', pad=20)
+        
+        # Círculo central para efecto dona
+        centre_circle = plt.Circle((0,0),0.70,fc='white')
+        fig.gca().add_artist(centre_circle)
+        ax.axis('equal')
+        
+        # Convertir a base64
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight', facecolor='white')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+        
+        graphic = base64.b64encode(image_png).decode('utf-8')
+        plt.close()
+        
+        return f"data:image/png;base64,{graphic}"
+        
+    except Exception as e:
+        print(f"Error generando gráfica base64: {e}")
+        return None
