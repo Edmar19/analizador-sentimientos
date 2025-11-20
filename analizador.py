@@ -32,7 +32,7 @@ class AnalizadorSentimientos:
         
         self.palabras_muy_positivas = {
             'excelente', 'increíble', 'maravilloso', 'fantástico', 'perfecto',
-            'encanta', 'amor', 'amo', 'espectacular', 'genial'
+            'encanta', 'amor', 'amo', 'espectacular', 'genial', 'increible'
         }
         
         self.palabras_muy_negativas = {
@@ -43,15 +43,19 @@ class AnalizadorSentimientos:
         # Negaciones que invierten el sentimiento
         self.negaciones = {'no', 'nunca', 'jamás', 'tampoco', 'sin'}
     
-    def detectar_negacion(self, texto, posicion_palabra):
+    def detectar_negacion(self, texto, palabra_objetivo):
         """
-        Detecta si hay una negación cerca de una palabra
+        Detecta negaciones mejor - busca 'no' antes de la palabra
         """
         palabras = texto.lower().split()
-        if posicion_palabra > 0:
-            palabra_anterior = palabras[posicion_palabra - 1]
-            if palabra_anterior in self.negaciones:
-                return True
+        try:
+            idx = palabras.index(palabra_objetivo)
+            # Revisar hasta 3 palabras antes
+            for i in range(max(0, idx-3), idx):
+                if palabras[i] in self.negaciones:
+                    return True
+        except ValueError:
+            pass
         return False
     
     def analizar_sentimiento(self, texto):
@@ -75,17 +79,18 @@ class AnalizadorSentimientos:
         for palabra in self.palabras_muy_positivas:
             if palabra in texto_lower:
                 # Verificar si está negada (ej: "no es excelente")
-                if palabra in ' '.join(palabras):
-                    idx = palabras.index(palabra) if palabra in palabras else -1
-                    if idx > 0 and self.detectar_negacion(texto, idx):
-                        score_negativo += 2  # Invierte a negativo
-                    else:
-                        score_positivo += 2
+                if self.detectar_negacion(texto_lower, palabra):
+                    score_negativo += 2  # Invierte a negativo
+                else:
+                    score_positivo += 2
         
         # Palabras positivas normales
         for palabra in self.palabras_positivas:
-            if palabra in texto_lower:
-                score_positivo += 1
+            if palabra in texto_lower and palabra not in self.palabras_muy_positivas:
+                if self.detectar_negacion(texto_lower, palabra):
+                    score_negativo += 1  # Invierte a negativo
+                else:
+                    score_positivo += 1
         
         # Palabras muy negativas
         for palabra in self.palabras_muy_negativas:
@@ -94,7 +99,7 @@ class AnalizadorSentimientos:
         
         # Palabras negativas normales
         for palabra in self.palabras_negativas:
-            if palabra in texto_lower:
+            if palabra in texto_lower and palabra not in self.palabras_muy_negativas:
                 score_negativo += 1
         
         # Detectar signos de exclamación múltiples (intensifican el sentimiento)
@@ -123,9 +128,9 @@ class AnalizadorSentimientos:
         else:
             confianza = 0
         
-        # Clasificar sentimiento
+        # Clasificar sentimiento - UMBRAL MEJORADO
         # Si tiene palabras neutras explícitas y el score es bajo, clasificar como neutro
-        if tiene_palabras_neutras and abs(score_final) <= 1:
+        if tiene_palabras_neutras and abs(score_final) <= 2:  # CAMBIADO de 1 a 2
             sentimiento = 'Neutro'
             emoji = '😐'
         elif score_final > 0:
