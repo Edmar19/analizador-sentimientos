@@ -8,50 +8,37 @@ import os
 
 class AnalizadorSentimientos:
     def __init__(self):
-        # Palabras positivas
         self.palabras_positivas = {
-            'excelente', 'bueno', 'buena', 'buenos', 'buenas', 'genial', 'increíble', 
-            'perfecto', 'perfecta', 'recomendado', 'recomendada', 'encanta', 'encantó', 
-            'mejor', 'mejores', 'feliz', 'contento', 'contenta', 'maravilloso', 'maravillosa',
-            'fantástico', 'fantástica', 'súper', 'super', 'amor', 'amo', 'love',
-            'calidad', 'rápido', 'rápida', 'eficiente', 'profesional', 'amable',
-            'superó', 'expectativas', 'satisfecho', 'satisfecha', 'vale', 'pena',
-            'estrellas', 'recomiendo', 'felicitaciones', 'gracias', 'éxito', 'exitoso',
-            'hermoso', 'hermosa', 'bonito', 'bonita', 'agradable', 'divertido',
-            'útil', 'práctico', 'práctica', 'barato', 'barata', 'económico',
-            'fácil', 'sencillo', 'sencilla', 'claro', 'clara', 'preciso', 'exacto'
+            'excelente', 'bueno', 'buena', 'genial', 'increible', 
+            'perfecto', 'recomendado', 'encanta', 'encanto', 
+            'mejor', 'feliz', 'contento', 'maravilloso', 'fantastico',
+            'super', 'amor', 'amo', 'calidad', 'rapido', 'eficiente',
+            'profesional', 'amable', 'supero', 'satisfecho', 'vale',
+            'recomiendo', 'gracias', 'exito', 'hermoso', 'bonito',
+            'agradable', 'divertido', 'util', 'practico', 'barato',
+            'economico', 'facil', 'sencillo', 'claro'
         }
         
-        # Palabras negativas
         self.palabras_negativas = {
-            'malo', 'mala', 'malos', 'malas', 'pésimo', 'pésima', 'horrible', 
-            'terrible', 'defectuoso', 'defectuosa', 'roto', 'rota', 'nunca', 
-            'jamás', 'peor', 'peores', 'lento', 'lenta', 'caro', 'cara',
-            'estafa', 'fraude', 'decepción', 'decepcionante', 'problema', 
-            'problemas', 'falla', 'fallas', 'defecto', 'defectos', 'insatisfecho',
-            'insatisfecha', 'desagradable', 'diferente', 'desilusión', 'engaño', 
-            'rompió', 'desperfecto', 'averiado', 'dañado', 'estropeado', 'inútil'
+            'malo', 'mala', 'pesimo', 'pesima', 'horrible', 
+            'terrible', 'defectuoso', 'roto', 'nunca', 
+            'jamas', 'peor', 'lento', 'caro', 'estafa', 'fraude',
+            'decepcion', 'decepcionante', 'problema', 'falla',
+            'defecto', 'insatisfecho', 'desagradable', 'diferente',
+            'desilusion', 'engano', 'rompio', 'inutil', 'complicado',
+            'dificil', 'complejo', 'confuso'
         }
         
-        # Palabras neutras
-        self.palabras_neutras = {
-            'normal', 'regular', 'común', 'estándar', 'básico', 'cumple',
-            'función', 'aceptable', 'ok', 'bien', 'nada', 'especial',
-            'promedio', 'justo', 'usual', 'habitual'
-        }
-        
-        # Negaciones
-        self.negaciones = {'no', 'nunca', 'jamás', 'tampoco', 'sin', 'ni', 'nada'}
-        
-        # Frases completas
         self.frases_negativas = {
-            'se rompió', 'mala calidad', 'no sirve', 'no funciona', 'no me gustó',
-            'no lo recomiendo', 'no vale la pena', 'no cumple'
+            'se rompio', 'mala calidad', 'no sirve', 'no funciona', 
+            'no me gusto', 'no lo recomiendo', 'no vale la pena', 
+            'no cumple', 'no es lo que esperaba'
         }
         
         self.frases_positivas = {
-            'lo recomiendo', 'vale la pena', 'superó expectativas', 'cumple con lo prometido',
-            'excelente calidad', 'muy buen', 'muy buena', 'totalmente recomendado'
+            'lo recomiendo', 'vale la pena', 'supero expectativas', 
+            'cumple con lo prometido', 'excelente calidad', 
+            'muy buen', 'muy buena', 'totalmente recomendado'
         }
 
     def limpiar_texto(self, texto):
@@ -64,15 +51,14 @@ class AnalizadorSentimientos:
 
     def analizar_sentimiento(self, texto):
         if not texto or texto.strip() == "":
-            return self._resultado_neutro()
+            return self.resultado_neutro()
         
         texto_limpio = self.limpiar_texto(texto)
-        palabras = texto_limpio.split()
         
         score_positivo = 0
         score_negativo = 0
         
-        # Analizar frases completas primero
+        # Analizar frases completas
         for frase in self.frases_positivas:
             if frase in texto_limpio:
                 score_positivo += 2
@@ -82,6 +68,7 @@ class AnalizadorSentimientos:
                 score_negativo += 2
         
         # Analizar palabras individuales
+        palabras = texto_limpio.split()
         for palabra in palabras:
             if palabra in self.palabras_positivas:
                 score_positivo += 1
@@ -109,7 +96,7 @@ class AnalizadorSentimientos:
             sentimiento = 'Neutro'
             emoji = '😐'
         
-        # Calcular confianza básica
+        # Calcular confianza
         total_puntos = score_positivo + score_negativo
         if total_puntos > 0:
             confianza = (max(score_positivo, score_negativo) / total_puntos) * 100
@@ -125,7 +112,7 @@ class AnalizadorSentimientos:
             'palabras_negativas': score_negativo
         }
     
-    def _resultado_neutro(self):
+    def resultado_neutro(self):
         return {
             'sentimiento': 'Neutro',
             'emoji': '😐',
@@ -136,7 +123,6 @@ class AnalizadorSentimientos:
         }
 
 
-# FUNCIÓN CORREGIDA - nombre correcto
 def procesar_comentarios_completos(comentarios):
     analizador = AnalizadorSentimientos()
     resultados = []
