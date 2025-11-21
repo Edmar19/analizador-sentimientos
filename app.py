@@ -1,10 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
-import csv
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
@@ -19,28 +17,11 @@ def analizar():
         tipo = request.form.get('tipo')
         comentarios = []
         
-        if tipo == 'archivo':
-            if 'file' not in request.files:
-                return redirect(url_for('index'))
-            
-            file = request.files['file']
-            
-            if file.filename == '':
-                return redirect(url_for('index'))
-            
-            if file and file.filename.endswith('.txt'):
-                contenido = file.read().decode('utf-8')
-                comentarios = [linea.strip() for linea in contenido.split('\n') if linea.strip()]
-            elif file and file.filename.endswith('.csv'):
-                contenido = file.read().decode('utf-8')
-                lineas = contenido.split('\n')
-                for linea in lineas:
-                    if linea.strip():
-                        comentarios.append(linea.strip())
-        
-        elif tipo == 'texto':
+        if tipo == 'texto':
             texto = request.form.get('comentarios', '')
             comentarios = [linea.strip() for linea in texto.split('\n') if linea.strip()]
+        else:
+            return "Solo texto por ahora", 400
         
         if not comentarios:
             return redirect(url_for('index'))
