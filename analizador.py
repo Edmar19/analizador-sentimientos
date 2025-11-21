@@ -1,4 +1,3 @@
-from textblob import TextBlob
 import re
 import matplotlib
 matplotlib.use('Agg')  # ⚠️ IMPORTANTE: Esto debe ir ANTES de importar pyplot
@@ -9,7 +8,7 @@ import os
 
 class AnalizadorSentimientos:
     """
-    Clase mejorada para analizar sentimientos en español con mejor precisión
+    Clase mejorada para analizar sentimientos en español SIN TextBlob
     """
     def __init__(self):
         # Palabras positivas expandidas
@@ -44,7 +43,7 @@ class AnalizadorSentimientos:
             'erróneo', 'equivocado', 'deficiente', 'imperfecto', 'desastroso', 
             'catastrófico', 'desalentador', 'frustrante', 'molesto', 'irritante', 
             'fastidioso', 'engorroso', 'complicado', 'difícil', 'complejo', 
-            'confuso', 'ambiguous', 'incierto', 'dudoso', 'sospechoso', 'deshonesto', 
+            'confuso', 'incierto', 'dudoso', 'sospechoso', 'deshonesto', 
             'fraudulento', 'estafador', 'mediocre', 'pobre', 'basura', 'asco',
             'horrible', 'horrendo', 'repugnante', 'deplorable', 'lamentable'
         }
@@ -102,6 +101,8 @@ class AnalizadorSentimientos:
 
     def limpiar_texto(self, texto):
         """Limpia el texto manteniendo caracteres importantes"""
+        if not texto:
+            return ""
         # Convertir a minúsculas para uniformidad
         texto = texto.lower()
         # Remover URLs
@@ -214,7 +215,7 @@ class AnalizadorSentimientos:
 
     def analizar_sentimiento(self, texto):
         """
-        Análisis principal de sentimiento con mejor precisión
+        Análisis principal de sentimiento SIN TextBlob
         """
         if not texto or texto.strip() == "":
             return {
@@ -379,16 +380,28 @@ def procesar_comentarios_completos(comentarios):
     resultados = []
     
     for i, comentario in enumerate(comentarios, 1):
-        analisis = analizador.analizar_sentimiento(comentario)
-        
-        resultados.append({
-            'id': i,
-            'comentario': comentario,
-            'sentimiento': analisis['sentimiento'],
-            'emoji': analisis['emoji'],
-            'confianza': analisis['confianza'],
-            'score': analisis['score']
-        })
+        try:
+            analisis = analizador.analizar_sentimiento(comentario)
+            
+            resultados.append({
+                'id': i,
+                'comentario': comentario,
+                'sentimiento': analisis['sentimiento'],
+                'emoji': analisis['emoji'],
+                'confianza': analisis['confianza'],
+                'score': analisis['score']
+            })
+        except Exception as e:
+            # Si hay error en un comentario individual, lo marcamos como error pero continuamos
+            resultados.append({
+                'id': i,
+                'comentario': comentario,
+                'sentimiento': 'Error',
+                'emoji': '❌',
+                'confianza': 0,
+                'score': 0,
+                'error': str(e)
+            })
     
     return resultados
 
@@ -397,115 +410,33 @@ def generar_reporte(resultados):
     """
     Genera un reporte estadístico de los sentimientos
     """
-    total = len(resultados)
-    positivos = sum(1 for r in resultados if r['sentimiento'] == 'Positivo')
-    negativos = sum(1 for r in resultados if r['sentimiento'] == 'Negativo')
-    neutros = sum(1 for r in resultados if r['sentimiento'] == 'Neutro')
-    
-    reporte = {
-        'total': total,
-        'positivos': positivos,
-        'negativos': negativos,
-        'neutros': neutros,
-        'porcentaje_positivos': round((positivos / total * 100), 2) if total > 0 else 0,
-        'porcentaje_negativos': round((negativos / total * 100), 2) if total > 0 else 0,
-        'porcentaje_neutros': round((neutros / total * 100), 2) if total > 0 else 0
-    }
-    
-    return reporte
-
-
-def obtener_top_comentarios(resultados, tipo='positivos', cantidad=5):
-    """
-    Obtiene los comentarios más positivos o negativos
-    """
-    if tipo == 'positivos':
-        positivos = [r for r in resultados if r['sentimiento'] == 'Positivo']
-        positivos_ordenados = sorted(positivos, key=lambda x: x['score'], reverse=True)
-        return positivos_ordenados[:cantidad]
-    else:
-        negativos = [r for r in resultados if r['sentimiento'] == 'Negativo']
-        negativos_ordenados = sorted(negativos, key=lambda x: x['score'])
-        return negativos_ordenados[:cantidad]
-
-
-def generar_datos_grafico(reporte):
-    """
-    Genera datos para el gráfico de pastel
-    """
-    labels = ['Positivos', 'Negativos', 'Neutros']
-    values = [
-        reporte['porcentaje_positivos'], 
-        reporte['porcentaje_negativos'], 
-        reporte['porcentaje_neutros']
-    ]
-    colors = ['#38ef7d', '#f45c43', '#bdc3c7']
-    
-    return {
-        'labels': labels,
-        'values': values,
-        'colors': colors
-    }
-
-
-def generar_grafica_pastel(reporte, filename='grafica_pastel.png'):
-    """
-    Genera una gráfica de pastel con los resultados y la guarda como imagen
-    """
     try:
-        # Configurar estilo
-        plt.style.use('default')
-        fig, ax = plt.subplots(figsize=(10, 8))
+        total = len(resultados)
+        positivos = sum(1 for r in resultados if r['sentimiento'] == 'Positivo')
+        negativos = sum(1 for r in resultados if r['sentimiento'] == 'Negativo')
+        neutros = sum(1 for r in resultados if r['sentimiento'] == 'Neutro')
         
-        # Datos para la gráfica
-        labels = ['Positivos 😊', 'Negativos 😞', 'Neutros 😐']
-        sizes = [
-            reporte['porcentaje_positivos'],
-            reporte['porcentaje_negativos'], 
-            reporte['porcentaje_neutros']
-        ]
-        colors = ['#38ef7d', '#f45c43', '#bdc3c7']
-        explode = (0.05, 0.05, 0.05)  # Separar ligeramente las porciones
+        reporte = {
+            'total': total,
+            'positivos': positivos,
+            'negativos': negativos,
+            'neutros': neutros,
+            'porcentaje_positivos': round((positivos / total * 100), 2) if total > 0 else 0,
+            'porcentaje_negativos': round((negativos / total * 100), 2) if total > 0 else 0,
+            'porcentaje_neutros': round((neutros / total * 100), 2) if total > 0 else 0
+        }
         
-        # Crear gráfica de pastel
-        wedges, texts, autotexts = ax.pie(
-            sizes, explode=explode, labels=labels, colors=colors,
-            autopct='%1.1f%%', shadow=True, startangle=90,
-            textprops={'fontsize': 12, 'weight': 'bold'}
-        )
-        
-        # Mejorar los porcentajes
-        for autotext in autotexts:
-            autotext.set_color('white')
-            autotext.set_fontweight('bold')
-            autotext.set_fontsize(11)
-        
-        # Título
-        ax.set_title('Distribución de Sentimientos\n', fontsize=16, fontweight='bold', pad=20)
-        
-        # Hacer el círculo central blanco (pastel dona)
-        centre_circle = plt.Circle((0,0),0.70,fc='white')
-        fig.gca().add_artist(centre_circle)
-        
-        # Asegurar que sea un círculo perfecto
-        ax.axis('equal')
-        
-        # Leyenda
-        ax.legend(wedges, labels, title="Sentimientos", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
-        
-        plt.tight_layout()
-        
-        # Guardar la imagen
-        img_path = os.path.join('static', 'img', filename)
-        os.makedirs(os.path.dirname(img_path), exist_ok=True)
-        plt.savefig(img_path, dpi=100, bbox_inches='tight', facecolor='white')
-        plt.close()
-        
-        return filename
-        
+        return reporte
     except Exception as e:
-        print(f"Error generando gráfica: {e}")
-        return None
+        return {
+            'total': 0,
+            'positivos': 0,
+            'negativos': 0,
+            'neutros': 0,
+            'porcentaje_positivos': 0,
+            'porcentaje_negativos': 0,
+            'porcentaje_neutros': 0
+        }
 
 
 def generar_grafica_base64(reporte):
