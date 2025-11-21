@@ -1,5 +1,7 @@
 from textblob import TextBlob
 import re
+import matplotlib
+matplotlib.use('Agg')  # ⚠️ IMPORTANTE: Esto debe ir ANTES de importar pyplot
 import matplotlib.pyplot as plt
 import io
 import base64
