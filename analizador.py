@@ -1,11 +1,15 @@
-from textblob import TextBlob
 import re
+import logging
 
 class AnalizadorSentimientos:
     """
     Clase mejorada para analizar sentimientos en español con mejor precisión
     """
-    def __init__(self):
+    def __init__(self, debug=False):
+        self.debug = debug
+        if debug:
+            logging.basicConfig(level=logging.DEBUG)
+        
         # Palabras positivas expandidas
         self.palabras_positivas = {
             'excelente', 'bueno', 'buena', 'buenos', 'buenas', 'genial', 'increíble', 
@@ -23,7 +27,10 @@ class AnalizadorSentimientos:
             'impresionante', 'asombroso', 'sorprendente', 'inmejorable',
             'inigualable', 'extraordinario', 'magnífico', 'espléndido',
             'estupendo', 'fenomenal', 'provechoso', 'beneficioso', 'ventajoso',
-            'encantador', 'precioso', 'divino', 'exquisito', 'espectacular'
+            'encantador', 'precioso', 'divino', 'exquisito', 'espectacular',
+            # Palabras coloquiales mexicanas/latinoamericanas
+            'chido', 'chida', 'padre', 'padrísimo', 'chingón', 'chingona',
+            'chévere', 'piola', 'joya', 'bacán', 'capo', 'crack'
         }
         
         self.palabras_negativas = {
@@ -40,7 +47,9 @@ class AnalizadorSentimientos:
             'fastidioso', 'engorroso', 'complicado', 'difícil', 'complejo', 
             'confuso', 'ambiguo', 'incierto', 'dudoso', 'sospechoso', 'deshonesto', 
             'fraudulento', 'estafador', 'mediocre', 'pobre', 'basura', 'asco',
-            'horrible', 'horrendo', 'repugnante', 'deplorable', 'lamentable'
+            'horrendo', 'repugnante', 'deplorable', 'lamentable',
+            # Palabras coloquiales mexicanas/latinoamericanas
+            'gacho', 'gacha', 'culero', 'pirata', 'chafa', 'corriente', 'feo'
         }
         
         self.palabras_neutras = {
@@ -54,7 +63,8 @@ class AnalizadorSentimientos:
             'excelente', 'increíble', 'maravilloso', 'fantástico', 'perfecto',
             'encanta', 'amor', 'amo', 'espectacular', 'genial', 'súper',
             'sobresaliente', 'brillante', 'impresionante', 'asombroso',
-            'extraordinario', 'magnífico', 'espléndido', 'fenomenal'
+            'extraordinario', 'magnífico', 'espléndido', 'fenomenal',
+            'padrísimo', 'chingón', 'chingona'
         }
         
         self.palabras_muy_negativas = {
@@ -70,12 +80,12 @@ class AnalizadorSentimientos:
         self.intensificadores = {
             'muy', 'mucho', 'mucha', 'bastante', 'totalmente', 'completamente',
             'absolutamente', 'realmente', 'extremadamente', 'increíblemente',
-            'sumamente', 'demasiado', 'tan', 'bien'
+            'sumamente', 'demasiado', 'tan', 'bien', 'súper', 'mega', 'ultra'
         }
         
         self.atenuadores = {
             'poco', 'ligeramente', 'algo', 'medianamente', 'relativamente',
-            'apenas', 'casi', 'medio'
+            'apenas', 'casi', 'medio', 'más', 'menos'
         }
         
         # Frases completas con contexto
@@ -84,18 +94,40 @@ class AnalizadorSentimientos:
             'no lo recomiendo', 'no vale la pena', 'no cumple', 'no es lo que esperaba',
             'pérdida de tiempo', 'no volveré', 'no lo compren', 'nunca más',
             'jamás lo recomendaría', 'decepción total', 'no lo vuelvo a comprar',
-            'no vale', 'no merece', 'no lo compraría', 'estafa total'
+            'no vale', 'no merece', 'no lo compraría', 'estafa total',
+            'puro cuento', 'pura mentira'
         }
         
         self.frases_positivas = {
             'lo recomiendo', 'vale la pena', 'superó expectativas', 'cumple con lo prometido',
             'excelente calidad', 'muy buen', 'muy buena', 'totalmente recomendado',
             'volveré a comprar', 'excelente servicio', 'muy contento', 'muy feliz',
-            'completamente satisfecho', 'mejor compra', 'vale cada peso', 'lo amo'
+            'completamente satisfecho', 'mejor compra', 'vale cada peso', 'lo amo',
+            'a toda madre', 'de lujo', 'primera calidad'
         }
+        
+        # Aspectos para análisis detallado
+        self.aspectos = {
+            'calidad': ['calidad', 'material', 'construcción', 'acabado', 'duradero'],
+            'precio': ['precio', 'caro', 'barato', 'costo', 'económico', 'vale'],
+            'servicio': ['servicio', 'atención', 'entrega', 'envío', 'soporte'],
+            'funcionalidad': ['funciona', 'sirve', 'uso', 'útil', 'práctico']
+        }
+
+    def normalizar_texto(self, texto):
+        """Normaliza variaciones comunes en el texto"""
+        # Normalizar repeticiones excesivas de puntuación
+        texto = re.sub(r'([!?.]){3,}', r'\1\1', texto)
+        
+        # Normalizar letras repetidas (pero mantener algunas válidas)
+        # "bueeeno" → "bueno", pero no afectar "llevar"
+        texto = re.sub(r'(.)\1{3,}', r'\1\1', texto)
+        
+        return texto
 
     def limpiar_texto(self, texto):
         """Limpia el texto manteniendo caracteres importantes"""
+        texto = self.normalizar_texto(texto)
         # Convertir a minúsculas para uniformidad
         texto = texto.lower()
         # Remover URLs
@@ -104,11 +136,17 @@ class AnalizadorSentimientos:
         texto = re.sub(r'\s+', ' ', texto).strip()
         return texto
 
-    def detectar_negacion_avanzada(self, texto, posicion_palabra):
+    def detectar_negacion_mejorada(self, texto, posicion_palabra):
         """
         Detecta negaciones de forma más precisa considerando el contexto
+        Mejora: maneja doble negación ("no es malo" = positivo)
         """
         palabras = texto.split()
+        
+        if posicion_palabra >= len(palabras):
+            return False
+        
+        palabra_actual = palabras[posicion_palabra]
         
         # Buscar negaciones en las 3 palabras anteriores
         inicio = max(0, posicion_palabra - 3)
@@ -117,7 +155,16 @@ class AnalizadorSentimientos:
         # Contar negaciones
         negaciones_encontradas = sum(1 for p in segmento_previo if p in self.negaciones)
         
-        # Si hay un número impar de negaciones, se invierte el sentimiento
+        # Doble negación: "no es malo" debería ser positivo
+        if negaciones_encontradas > 0:
+            # Si la palabra actual es negativa y hay negación, se vuelve positiva
+            if palabra_actual in self.palabras_negativas:
+                return True  # Invertir
+            # Si la palabra es positiva y hay negación, se vuelve negativa
+            elif palabra_actual in self.palabras_positivas:
+                return True  # Invertir
+        
+        # Si hay número impar de negaciones, se invierte el sentimiento
         return negaciones_encontradas % 2 == 1
 
     def calcular_intensidad_mejorada(self, texto, posicion_palabra):
@@ -139,6 +186,24 @@ class AnalizadorSentimientos:
         
         return min(intensidad, 3.0)  # Limitar intensidad máxima
 
+    def detectar_sarcasmo(self, texto):
+        """
+        Detecta posible sarcasmo básico
+        """
+        # Sarcasmo común: palabras positivas con muchos signos de puntuación
+        if re.search(r'(excelente|genial|perfecto|bueno)[.!]{3,}', texto):
+            return True
+        
+        # "Qué bueno..." o "Muy bien..." con puntos suspensivos (tono sarcástico)
+        if re.search(r'(bueno|bien|genial)\.\.\.$', texto):
+            return True
+        
+        # "Excelente" seguido de "no"
+        if re.search(r'(excelente|genial|perfecto).{0,10}(no|pero)', texto):
+            return True
+        
+        return False
+
     def analizar_frases_contextuales(self, texto):
         """
         Analiza frases completas que tienen un sentimiento claro
@@ -149,11 +214,15 @@ class AnalizadorSentimientos:
         for frase in self.frases_positivas:
             if frase in texto:
                 score += 2.5
+                if self.debug:
+                    logging.debug(f"Frase positiva encontrada: {frase}")
         
         # Buscar frases negativas
         for frase in self.frases_negativas:
             if frase in texto:
                 score -= 2.5
+                if self.debug:
+                    logging.debug(f"Frase negativa encontrada: {frase}")
         
         return score
 
@@ -185,6 +254,9 @@ class AnalizadorSentimientos:
         if re.search(r'\b(estafa|fraude|enga[ñn]o)\b', texto):
             score -= 3
         
+        if self.debug and score != 0:
+            logging.debug(f"Score de patrones regex: {score}")
+        
         return score
 
     def analizar_emojis_y_puntuacion(self, texto):
@@ -204,7 +276,22 @@ class AnalizadorSentimientos:
         # Exclamaciones (amplifican el sentimiento)
         exclamaciones = len(re.findall(r'!+', texto))
         
+        if self.debug and (emojis_positivos > 0 or emojis_negativos > 0):
+            logging.debug(f"Emojis positivos: {emojis_positivos}, negativos: {emojis_negativos}")
+        
         return score, exclamaciones
+
+    def analizar_aspectos(self, texto):
+        """
+        Identifica qué aspectos se están evaluando
+        """
+        aspectos_encontrados = {}
+        
+        for aspecto, palabras_clave in self.aspectos.items():
+            if any(palabra in texto for palabra in palabras_clave):
+                aspectos_encontrados[aspecto] = True
+        
+        return aspectos_encontrados
 
     def analizar_sentimiento(self, texto):
         """
@@ -217,12 +304,21 @@ class AnalizadorSentimientos:
                 'score': 0,
                 'confianza': 0,
                 'palabras_positivas': 0,
-                'palabras_negativas': 0
+                'palabras_negativas': 0,
+                'aspectos': {}
             }
         
         texto_original = texto
         texto = self.limpiar_texto(texto)
         palabras = texto.split()
+        
+        if self.debug:
+            logging.debug(f"Analizando: {texto}")
+        
+        # Detectar sarcasmo
+        tiene_sarcasmo = self.detectar_sarcasmo(texto)
+        if tiene_sarcasmo and self.debug:
+            logging.debug("Posible sarcasmo detectado")
         
         # Inicializar contadores
         score_positivo = 0
@@ -268,8 +364,8 @@ class AnalizadorSentimientos:
                 else:
                     peso_base = -1.0
                 
-                # Detectar negación
-                tiene_negacion = self.detectar_negacion_avanzada(texto, i)
+                # Detectar negación mejorada
+                tiene_negacion = self.detectar_negacion_mejorada(texto, i)
                 
                 # Calcular intensidad
                 intensidad = self.calcular_intensidad_mejorada(texto, i)
@@ -279,6 +375,9 @@ class AnalizadorSentimientos:
                     peso_base = -peso_base
                 
                 peso_final = peso_base * intensidad
+                
+                if self.debug:
+                    logging.debug(f"Palabra: {palabra}, peso_base: {peso_base}, intensidad: {intensidad}, negación: {tiene_negacion}, peso_final: {peso_final}")
                 
                 # Acumular en el score correspondiente
                 if peso_final > 0:
@@ -304,8 +403,17 @@ class AnalizadorSentimientos:
         # 5. Detectar palabras neutras explícitas
         tiene_neutras = any(palabra in self.palabras_neutras for palabra in palabras)
         
+        # 6. Analizar aspectos
+        aspectos = self.analizar_aspectos(texto)
+        
         # Calcular score final
         score_final = score_positivo - score_negativo
+        
+        # Ajustar por sarcasmo (invertir si es muy positivo con sarcasmo)
+        if tiene_sarcasmo and score_final > 2:
+            score_final = -abs(score_final) * 0.7
+            if self.debug:
+                logging.debug("Score ajustado por sarcasmo")
         
         # Calcular confianza
         total_palabras_significativas = palabras_analizadas
@@ -325,6 +433,9 @@ class AnalizadorSentimientos:
                 confianza = max(confianza - 10, 40)
         else:
             confianza = 30
+        
+        if self.debug:
+            logging.debug(f"Score positivo: {score_positivo}, Score negativo: {score_negativo}, Score final: {score_final}")
         
         # Clasificación final con umbrales adaptativos
         umbral_fuerte = 2.0
@@ -361,15 +472,16 @@ class AnalizadorSentimientos:
             'score': round(score_final, 2),
             'confianza': round(confianza, 2),
             'palabras_positivas': round(score_positivo, 2),
-            'palabras_negativas': round(score_negativo, 2)
+            'palabras_negativas': round(score_negativo, 2),
+            'aspectos': aspectos
         }
 
 
-def procesar_comentarios_completos(comentarios):
+def procesar_comentarios_completos(comentarios, debug=False):
     """
     Procesa una lista completa de comentarios
     """
-    analizador = AnalizadorSentimientos()
+    analizador = AnalizadorSentimientos(debug=debug)
     resultados = []
     
     for i, comentario in enumerate(comentarios, 1):
@@ -381,7 +493,8 @@ def procesar_comentarios_completos(comentarios):
             'sentimiento': analisis['sentimiento'],
             'emoji': analisis['emoji'],
             'confianza': analisis['confianza'],
-            'score': analisis['score']
+            'score': analisis['score'],
+            'aspectos': analisis['aspectos']
         })
     
     return resultados
@@ -392,6 +505,17 @@ def generar_reporte(resultados):
     Genera un reporte estadístico de los sentimientos
     """
     total = len(resultados)
+    if total == 0:
+        return {
+            'total': 0,
+            'positivos': 0,
+            'negativos': 0,
+            'neutros': 0,
+            'porcentaje_positivos': 0,
+            'porcentaje_negativos': 0,
+            'porcentaje_neutros': 0
+        }
+    
     positivos = sum(1 for r in resultados if r['sentimiento'] == 'Positivo')
     negativos = sum(1 for r in resultados if r['sentimiento'] == 'Negativo')
     neutros = sum(1 for r in resultados if r['sentimiento'] == 'Neutro')
@@ -401,9 +525,9 @@ def generar_reporte(resultados):
         'positivos': positivos,
         'negativos': negativos,
         'neutros': neutros,
-        'porcentaje_positivos': round((positivos / total * 100), 2) if total > 0 else 0,
-        'porcentaje_negativos': round((negativos / total * 100), 2) if total > 0 else 0,
-        'porcentaje_neutros': round((neutros / total * 100), 2) if total > 0 else 0
+        'porcentaje_positivos': round((positivos / total * 100), 2),
+        'porcentaje_negativos': round((negativos / total * 100), 2),
+        'porcentaje_neutros': round((neutros / total * 100), 2)
     }
     
     return reporte
@@ -440,3 +564,32 @@ def generar_datos_grafico(reporte):
         'values': values,
         'colors': colors
     }
+
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    # Pruebas básicas
+    analizador = AnalizadorSentimientos(debug=True)
+    
+    pruebas = [
+        "Este producto es excelente, lo recomiendo totalmente 😊",
+        "No me gustó para nada, es una estafa",
+        "Está bien, nada especial",
+        "No es malo, cumple su función",
+        "Muy bueno!! Superó mis expectativas",
+        "Pésimo servicio, nunca más vuelvo",
+        "Es chido, vale la pena"
+    ]
+    
+    print("=" * 60)
+    print("PRUEBAS DEL ANALIZADOR DE SENTIMIENTOS MEJORADO")
+    print("=" * 60)
+    
+    for texto in pruebas:
+        resultado = analizador.analizar_sentimiento(texto)
+        print(f"\nTexto: {texto}")
+        print(f"Sentimiento: {resultado['sentimiento']} {resultado['emoji']}")
+        print(f"Score: {resultado['score']}")
+        print(f"Confianza: {resultado['confianza']}%")
+        print(f"Aspectos: {list(resultado['aspectos'].keys())}")
+        print("-" * 60)
