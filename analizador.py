@@ -55,20 +55,71 @@ class AnalizadorSentimientos:
             'sorprendente','satisfecho','satisfecha','encanta','encantó','recomiendo','recomendado',
             'vale','pena','util','útil','practico','práctico','bueno','buena','buenisimo','buenísimo',
             'amable','rapido','rápido','eficiente','gracias','feliz','contento','contenta','mejor','sobresaliente',
-            'impecable','premium','exitoso','estupendo'
-        }
+            'impecable','premium','exitoso','estupendo',
+            'magnífica','magnífica','fantabuloso','increíblemente','óptimo','óptima','maravillosamente',
+            'excelentemente','grandioso','grandiosa','placentero','placentera','positivo','positiva',
+            'útilísimo','útilisima','formidable','excelentísimo','excelentisimo','comodísimo','comodisimo',
+            'inmejorable','brillante','top','hermoso','hermosa','valioso','valiosa','increíblemente bueno',
+            'agradable','agradablemente','perfectísimo','perfectisimo','eficaz','efectivo','efectiva',
+            'superior','notable','respetuoso','respetuosa','profesional','detallado','detallada',
+            'rápidamente','amablemente','gentil','atento','atenta','servicial','responsable','puntual',
+            'topísimo','topisimo','maravillosamente bien','excelente atención','excelente servicio',
+            'bien hecho','recomendadísimo','útil y práctico','estético','bonito','bonita',
+            'encantador','encantadora','excepcional','extraordinario','extraordinaria'
+            }
         # Palabras positivas FUERTES (peso mayor por sí solas)
-        self.p_positivas_fuertes = {'excelente','increible','increíble','maravilloso','fenomenal','impecable','sobresaliente','buenísimo','buenisimo'}
+        self.p_positivas_fuertes = {
+            'excelente', 'increible', 'increíble', 'maravilloso', 'fenomenal',
+            'impecable', 'sobresaliente', 'buenisimo', 'buenísimo', 'magnífico',
+            'magnifico', 'espectacular', 'perfecto', 'perfecta', 'fantástico',
+            'fantastico', 'extraordinario', 'extraordinaria', 'sensacional',
+            'impresionante', 'formidable', 'inmejorable', 'brillante',
+            'genial', 'excepcional', 'increíblemente bueno', 'maravillosamente bien'
+            }
 
         self.p_negativas = {
             'malo','mala','peor','peores','pésimo','pésima','horrible','terrible','decepcion','decepcionante',
             'defectuoso','defectuosa','defecto','defectos','dañado','dañada','roto','rota','falla','fallas',
             'inutil','inútil','inservible','estafa','fraude','engaño','engañó','engañar','cobro','lento','lenta',
             'caro','cara','basura','asco','trabas','traba','crash','crasheo','crashé','error','errores','frustrante',
-            'no sirve','no funciona','no me gustó','no me gusto','jamás','nunca','pésimo servicio','miserable'
-        }
+            'no sirve','no funciona','no me gustó','no me gusto','jamás','nunca','pésimo servicio','miserable',
+            # Problemas de funcionamiento
+            'no sirve','no funciona','no me gustó','no me gusto','no prende','no carga','no enciende',
+            'se apaga','se traba','se congela','se descompone','se descompuso','se rompió','no responde',
+            # Negativo fuerte sobre servicio
+            'jamás','nunca','tarde','tardado','tardanza','pésimo servicio','mal servicio','descuidado',
+            'irresponsable','mala atención','poca atención','mal trato','grosero','grosera','ineficiente',
+            # Experiencia negativa
+            'miserable','horrendo','terrible experiencia','torpe','deplorable','patético','patetico',
+            'lamentable','deficiente','molesto','molesta','molestia','inaceptable','inadmisible',
+            'desastroso','desastre','crítico','critico','problemático','problematico',
+            # Temas de dinero
+            'costoso','sobreprecio','carísimo','carisimo','cobran de más','cobro indebido','estafadores',
+            'estafa total','robo','robado','robada','mal negocio',
+            # Problemas de entrega/envío
+            'no llegó','no llega','no entregaron','no entregan','tardó demasiado','dañado en el envío',
+            'paquete incompleto','producto incompleto','faltante','faltantes',
+            # Problemas de calidad
+            'mal acabado','mal hecho','mal fabricado','mal ensamblado','pobre calidad','baja calidad',
+            'cutre','barato y malo','quebradizo','fragil','frágil',
+            # Sensación negativa
+            'arrepentido','arrepentida','arrepentimiento','vergonzoso','desagradable','molesto','terrible producto'
+            }
+        
         # Palabras negativas FUERTES
-        self.p_negativas_fuertes = {'pésimo','pesimo','horrible','terrible','estafa','fraude','miserable'}
+        self.p_negativas_fuertes = {
+            'pésimo','pesimo','horrible','terrible','estafa','fraude','miserable', "peligroso", "estafadores", "mentiras"
+            'asqueroso', 'patetico', 'patético', 'nefasta', 'nefasto',
+            'basura', 'malísimo', 'malisimo', 'engañoso', 'engaño',
+            'inútil', 'inutil', 'desastroso', 'defectuoso', 'repugnante',
+            'abominable', 'lamentable', 'engañoso', 'corrupto',
+            'pérdida', 'perdida', 'timo', 'fraudulento', 'inservible',
+            'pésima', 'pesima', 'horroroso', 'deplorable', 'desagradable',
+            'peligrosísimo', 'peligrosisimo', 'arruinado', 'arruina',
+            'falso', 'falsificado', 'ilegal', 'riesgoso', 'maltrato',
+            'estafado', 'deficiente', 'descompuesto', 'estafadora',
+            'inadmisible', 'vergonzoso', 'fatal', 'inaceptable'
+            }
 
         # Negaciones e intensificadores
         self.negaciones = {'no','nunca','jamás','jamas','tampoco','sin','ni','nadie','ninguno','ninguna','nada'}
@@ -77,15 +128,41 @@ class AnalizadorSentimientos:
 
         # Frases contextuales
         self.frases_positivas = {
-            'lo recomiendo','vale la pena','supero las expectativas','superó expectativas','cumple con lo prometido',
-            'excelente calidad','volveré a comprar','totalmente recomendado','mejor compra','vale cada peso','de primera calidad'
-        }
+            'lo recomiendo', 'vale la pena', 'calidad excepcional', 'supero las expectativas',
+            'superó expectativas', 'cumple con lo prometido', 'excelente calidad',
+            'volveré a comprar', 'totalmente recomendado', 'super recomendado', 'mejor compra',
+            'vale cada peso', 'de primera calidad', 'muy satisfecho', 'funciona perfectamente',
+            'encantado con el producto', 'superó lo esperado', 'compra recomendada',
+            'buena calidad', 'muy buena compra', 'me sorprendió para bien',
+            'excelente atención', 'justo lo que buscaba', 'funciona de maravilla',
+            'producto confiable', 'gran experiencia de compra', 'vale muchísimo la pena'
+            }
         self.frases_negativas = {
-            'perdida de tiempo','no vale la pena','no lo recomiendo','no lo volveré a comprar','estafa total','decepcion total','no merece'
+            'perdida de tiempo', 'no vale la pena', 'no lo recomiendo',
+            'no lo volveré a comprar', 'estafa total', 'decepcion total',
+            'no merece', 'muy mala calidad', 'no sirve para nada',
+            'no funciona bien', 'producto defectuoso', 'experiencia terrible',
+            'muy mala experiencia', 'malísima calidad', 'pésima calidad',
+            'mal servicio', 'engañado con el producto', 'publicidad engañosa',
+            'se descompuso rápido', 'no cumple lo prometido', 'nada recomendable',
+            'no es lo que esperaba', 'no vale lo que cuesta', 'me arrepiento de comprarlo',
+            'muy decepcionado', 'es una estafa', 'malísimo producto'
         }
 
-        self.bigrams_positive = {'muy bueno','muy bien','excelente servicio','muy util','muy útil','super recomendado','superó expectativas'}
-        self.bigrams_negative = {'muy malo','muy mal','no funciona','no sirve','pésimo servicio','nunca mas','nunca más','no lo recomiendo'}
+        self.bigrams_positive = {
+            'muy bueno', 'muy bien', 'excelente servicio', 'muy util', 'muy útil',
+            'super recomendado', 'superó expectativas', 'muy satisfecho',
+            'altamente recomendado', 'muy contento', 'muy buena calidad',
+            'gran producto', 'muy funcional', 'perfecto estado', 'excelente atención'
+        }
+        
+        self.bigrams_negative = {
+            'muy malo', 'muy mal', 'no funciona', 'no sirve', 'pésimo servicio',
+            'nunca mas', 'nunca más', 'no lo recomiendo', 'muy decepcionado',
+            'pésima calidad', 'muy mala calidad', 'mala experiencia',
+            'muy defectuoso', 'no cumple', 'no recomendable', 'pésimo producto',
+            'no vale', 'muy lento', 'se traba', 'se descompone'
+        }
 
         # Aspectos (clave -> palabras claves)
         self.aspectos = {
